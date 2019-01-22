@@ -1,0 +1,461 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Setup a Dremio cluster.'
+Parameters:
+  keyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    AllowedPattern: ".+"
+    ConstraintDescription: must select an existing EC2 KeyPair
+  instanceType:
+    Description: Same instance type is used for all the nodes.
+    Type: String
+    AllowedValues: [ t2.micro, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge, m4.16xlarge ]
+    Default: m4.xlarge
+  diskSize:
+    Description: GB - same disk size is used in all the nodes
+    Type: Number
+    Default: 100
+  coordinatorCount:
+    Description: There will be one master coordinator created aside these coordinator nodes.
+    Type: Number
+    Default: 0
+  executorCount:
+    Type: Number
+    Default: 1
+  s3bucket:
+    Description: "Optional - leave empty to use local disk. https://docs.dremio.com/deployment/distributed-storage.html."
+    Default: ""
+    Type: String
+  s3AWSKey:
+    Description: Required if a S3 bucket is provided
+    Default: ""
+    Type: String
+  s3AWSSecret:
+    Description: Required if a S3 bucket is provided
+    Default: ""
+    Type: String
+  dremioDownloadURL:
+    Description: "Optional - if empty, the latest Dremio published binaries are used."
+    Type: String
+Rules:
+  s3BucketSpecified:
+    RuleCondition: !Not [!Equals [ !Ref s3bucket, "" ]]
+    Assertions:
+      - Assert:  !Not [ !Equals [ !Ref s3AWSKey, ""]]
+        AssertDescription: "S3 bucket specified. AWS key cannot be empty."
+      - Assert:  !Not [ !Equals [ !Ref s3AWSSecret, ""]]
+        AssertDescription: "S3 bucket specified. AWS key cannot be empty."
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: Dremio Cluster Information - https://docs.dremio.com/deployment/node-roles.html
+        Parameters:
+          - coordinatorCount
+          - executorCount
+          - dremioDownloadURL
+      -
+        Label:
+          default: Optional S3 bucket for Dremio data
+        Parameters:
+          - s3bucket
+          - s3AWSKey
+          - s3AWSSecret
+      -
+        Label:
+          default: AWS resource configuration
+        Parameters:
+          - keyName
+          - instanceType
+          - diskSize
+    ParameterLabels:
+      keyName:
+        default : "AWS keypair"
+      instanceType:
+        default: "AWS instance type"
+      diskSize:
+        default: "Disk size"
+      s3bucket:
+        default: S3 bucket name - including directory path
+      s3AWSKey:
+        default: "AWS Key"
+      s3AWSSecret:
+        default: "AWS Secret"
+      coordinatorCount:
+        default: "Number of cooordinator nodes"
+      executorCount:
+        default: "Number of executor nodes"
+      dremioDownloadURL:
+        default: URL for Dremio binary
+Mappings:
+  Custom:
+    Variables:
+      URL: http://download.dremio.com/community-server/3.0.0-201810262305460004-5c90d75/dremio-community-3.0.0-201810262305460004_5c90d75_1.noarch.rpm
+  RegionMap:
+    # Centos Base Image us-east-2: ami-9c0638f9
+    us-east-1: # N Virginia
+      AMI: ami-4bf3d731
+    us-east-2: # Ohio
+      AMI: ami-e1496384
+    us-west-1: # California
+      AMI: ami-65e0e305
+    us-west-2: # Oregon
+      AMI: ami-a042f4d8
+    # ca-central-1: # Québec
+    #   AMI: ami-ac9a21c8
+    # eu-central-1: # Frankfurt
+    #   AMI: ami-627bf80d
+    # eu-west-1: # Ireland
+    #   AMI: ami-9802b7e1
+    # eu-west-2: # London
+    #   AMI: ami-27223d43
+    # ap-southeast-1: # Singapore
+    #   AMI: ami-82d387e1
+    # ap-southeast-2: # Sydney
+    #   AMI: ami-53698231
+    # ap-south-1 : # Mumbai
+    #   AMI: ami-8fb6f9e0
+    # ap-northeast-1: # Tokyo
+    #   AMI: ami-40398a26
+    # ap-northeast-2: # Seoul
+    #   AMI: ami-9e8225f0
+    # sa-east-1: # São Paulo
+    #   AMI: ami-665e1b0al
+  SubnetConfig:
+    VPC:
+      CIDR: 172.24.0.0/16
+    Public:
+      CIDR: 172.24.0.0/24
+    Private:
+      CIDR: 172.24.8.0/22
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      CidrBlock:
+        Fn::FindInMap:
+        - SubnetConfig
+        - VPC
+        - CIDR
+      Tags:
+      - Key: Name
+        Value: !Join ["-", [!Ref "AWS::StackName", "net"]]
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock:
+        Fn::FindInMap:
+        - SubnetConfig
+        - Public
+        - CIDR
+      Tags:
+      - Key: Name
+        Value: !Join ["-", [!Ref "AWS::StackName", "public"]]
+      - Key: Network
+        Value: Public
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: !Join ["-", [!Ref "AWS::StackName", "ig"]]
+
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: !Join ["-", [!Ref "AWS::StackName", "public"]]
+
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  DremioSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "Dremio Access"
+      GroupDescription: "Dremio Access"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '9047'
+        ToPort: '9047'
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: '31010'
+        ToPort: '31010'
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: '22'
+        ToPort: '22'
+        CidrIp: 0.0.0.0/0
+  AvailabilityWaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+  AvailabilityWaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    DependsOn: DremioMaster
+    Properties:
+      Handle: !Ref "AvailabilityWaitHandle"
+      Timeout: "600"
+
+  # S3Endpoint:
+  #   Type: AWS::EC2::VPCEndpoint
+  #   Properties:
+  #     ServiceName: !Join ["", ["com.amazonaws.", !Ref "AWS::Region", ".s3"]]
+  #     RouteTableIds:
+  #       - !Ref PublicRouteTable
+  #     VpcId: !Ref VPC
+
+  DremioMaster:
+    Type: AWS::EC2::Instance
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref "AWS::StackName", "DremioMaster"]]
+      ImageId:
+        Fn::FindInMap:
+        - RegionMap
+        - !Ref AWS::Region
+        - AMI
+      KeyName: !Ref keyName
+      InstanceType: !Ref instanceType
+      NetworkInterfaces:
+        - DeleteOnTermination: "true"
+          AssociatePublicIpAddress: "true"
+          DeviceIndex: 0
+          SubnetId: !Ref PublicSubnet
+          GroupSet: [!GetAtt ["VPC", "DefaultSecurityGroup"], !Ref DremioSecurityGroup]
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: !Ref diskSize
+            DeleteOnTermination: true
+            VolumeType: gp2
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash -x
+            statusFile=/tmp/statusfile
+            s3bucket=${s3bucket}
+            s3AWSKey=${s3AWSKey}
+            s3AWSSecret=${s3AWSSecret}
+            url=${dremioDownloadURL}
+            [ -z $url ] && url=${DOWNLOAD_URL}
+            yum -y install wget java-1.8.0-openjdk
+            wget $url
+            yum -y localinstall $(ls dremio-*)
+            if [ $? != 0 ]; then
+              echo "{ \"Status\" : \"FAILURE\", \"UniqueId\" : \"${AWS::StackName}\", \"Data\" : \"Failed\", \"Reason\" : \"Unable to download Dremio\" }" > $statusFile
+              curl -T $statusFile '${AvailabilityWaitHandle}'
+              exit 1
+            fi
+
+            DREMIO_CONFIG_FILE=/etc/dremio/dremio.conf
+
+            if [[ $s3bucket != "" ]]; then
+            cat <<EOM > /opt/dremio/conf/core-site.xml
+            <?xml version="1.0"?>
+            <configuration>
+               <property>
+                   <name>fs.s3a.access.key</name>
+                   <value>$s3AWSKey</value>
+               </property>
+               <property>
+                   <name>fs.s3a.secret.key</name>
+                   <value>$s3AWSSecret</value>
+               </property>
+            </configuration>
+            EOM
+            sed -i "s/#dist: .*/dist: \"s3a:\/\/$s3bucket\"/" $DREMIO_CONFIG_FILE
+            fi
+
+            sed -i "s/executor.enabled: true/executor.enabled: false/" $DREMIO_CONFIG_FILE
+            service dremio start
+            chkconfig dremio on
+
+            until curl -Iks http://localhost:9047; do
+              echo waiting for website availability
+              sleep 2
+            done
+            echo "{ \"Status\" : \"SUCCESS\", \"UniqueId\" : \"${AWS::StackName}\", \"Data\" : \"Ready\", \"Reason\" : \"Website Available\" }" > $statusFile
+            curl -T $statusFile '${AvailabilityWaitHandle}'
+          - DOWNLOAD_URL: !FindInMap [ Custom, Variables, "URL"]
+  DremioCoordinatorLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    DependsOn: DremioMaster
+    Properties:
+      AssociatePublicIpAddress: true
+      #EbsOptimized: true
+      ImageId:
+        Fn::FindInMap:
+        - RegionMap
+        - !Ref AWS::Region
+        - AMI
+      InstanceMonitoring: true
+      InstanceType: !Ref instanceType
+      KeyName: !Ref keyName
+      SecurityGroups: [!GetAtt ["VPC", "DefaultSecurityGroup"], !Ref DremioSecurityGroup]
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: !Ref diskSize
+            DeleteOnTermination: true
+            VolumeType: gp2
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash -x
+            s3bucket=${s3bucket}
+            s3AWSKey=${s3AWSKey}
+            s3AWSSecret=${s3AWSSecret}
+            url=${dremioDownloadURL}
+            [ -z $url ] && url=${DOWNLOAD_URL}
+            yum -y install wget java-1.8.0-openjdk
+            wget $url
+            yum -y localinstall $(ls dremio-*)
+
+            DREMIO_CONFIG_FILE=/etc/dremio/dremio.conf
+
+            if [[ $s3bucket != "" ]]; then
+            cat <<EOM > /opt/dremio/conf/core-site.xml
+            <?xml version="1.0"?>
+            <configuration>
+               <property>
+                   <name>fs.s3a.access.key</name>
+                   <value>$s3AWSKey</value>
+               </property>
+               <property>
+                   <name>fs.s3a.secret.key</name>
+                   <value>$s3AWSSecret</value>
+               </property>
+            </configuration>
+            EOM
+            sed -i "s/#dist: .*/dist: \"s3a:\/\/$s3bucket\"/" $DREMIO_CONFIG_FILE
+            fi
+
+            sed -i "s/coordinator.master.enabled: true/coordinator.master.enabled: false/; s/executor.enabled: true/executor.enabled: false/" $DREMIO_CONFIG_FILE
+            echo "zookeeper: \"${ZK}:2181\"" >> $DREMIO_CONFIG_FILE
+            service dremio start
+            chkconfig dremio on
+
+          - ZK: !GetAtt DremioMaster.PrivateIp
+            DOWNLOAD_URL: !FindInMap [ Custom, Variables, "URL"]
+  DremioCoordinatorASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn: DremioCoordinatorLC
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref "AWS::StackName", DremioCoordinator]]
+          PropagateAtLaunch: true
+          ResourceType: "auto-scaling-group"
+          ResourceId: !Ref "AWS::StackName"
+      LaunchConfigurationName: !Ref DremioCoordinatorLC
+      VPCZoneIdentifier: [!Ref PublicSubnet]
+      DesiredCapacity: !Ref coordinatorCount
+      MaxSize: !Ref coordinatorCount
+      MinSize: !Ref coordinatorCount
+
+  DremioExecutorLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    DependsOn: DremioMaster
+    Properties:
+      AssociatePublicIpAddress: true
+      #EbsOptimized: true
+      ImageId:
+        Fn::FindInMap:
+        - RegionMap
+        - !Ref AWS::Region
+        - AMI
+      InstanceMonitoring: true
+      InstanceType: !Ref instanceType
+      KeyName: !Ref keyName
+      SecurityGroups: [!GetAtt ["VPC", "DefaultSecurityGroup"], !Ref DremioSecurityGroup]
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: !Ref diskSize
+            DeleteOnTermination: true
+            VolumeType: gp2
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash -x
+            s3bucket=${s3bucket}
+            s3AWSKey=${s3AWSKey}
+            s3AWSSecret=${s3AWSSecret}
+            url=${dremioDownloadURL}
+            [ -z $url ] && url=${DOWNLOAD_URL}
+            yum -y install wget java-1.8.0-openjdk
+            wget $url
+            yum -y localinstall $(ls dremio-*)
+
+            DREMIO_CONFIG_FILE=/etc/dremio/dremio.conf
+
+            if [[ $s3bucket != "" ]]; then
+            cat <<EOM > /opt/dremio/conf/core-site.xml
+            <?xml version="1.0"?>
+            <configuration>
+               <property>
+                   <name>fs.s3a.access.key</name>
+                   <value>$s3AWSKey</value>
+               </property>
+               <property>
+                   <name>fs.s3a.secret.key</name>
+                   <value>$s3AWSSecret</value>
+               </property>
+            </configuration>
+            EOM
+            sed -i "s/#dist: .*/dist: \"s3a:\/\/$s3bucket\"/" $DREMIO_CONFIG_FILE
+            fi
+
+            sed -i "s/coordinator.master.enabled: true/coordinator.master.enabled: false/; s/coordinator.enabled: true/coordinator.enabled: false/" $DREMIO_CONFIG_FILE
+            echo "zookeeper: \"${ZK}:2181\"" >> $DREMIO_CONFIG_FILE
+            service dremio start
+            chkconfig dremio on
+
+          - ZK: !GetAtt DremioMaster.PrivateIp
+            DOWNLOAD_URL: !FindInMap [ Custom, Variables, "URL"]
+  DremioExecutorASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn: DremioExecutorLC
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref "AWS::StackName", DremioExecutor]]
+          PropagateAtLaunch: true
+          ResourceType: "auto-scaling-group"
+          ResourceId: !Ref "AWS::StackName"
+      LaunchConfigurationName: !Ref DremioExecutorLC
+      VPCZoneIdentifier: [!Ref PublicSubnet]
+      DesiredCapacity: !Ref executorCount
+      MaxSize: !Ref executorCount
+      MinSize: !Ref executorCount
+
+Outputs:
+  DremioUI:
+    Description: Dremio UI.
+    Value: !Join [ "", ["http://", !GetAtt DremioMaster.PublicIp, ":9047"]]

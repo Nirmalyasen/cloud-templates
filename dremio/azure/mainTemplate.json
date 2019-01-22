@@ -1,0 +1,132 @@
+
+{
+    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": "centralus"
+        },
+        "adminUsername": {
+          "type": "string",
+          "defaultValue": "azuser",
+          "metadata": {
+            "description": "User name for the Virtual Machine."
+          }
+        },
+        "authenticationType": {
+          "type": "string",
+          "defaultValue": "password",
+          "allowedValues": [
+            "password",
+            "sshPublicKey"
+          ],
+          "metadata": {
+            "description": "Type of authentication to use on the Virtual Machine."
+          }
+        },
+        "adminPasswordOrKey": {
+          "type": "securestring",
+          "metadata": {
+            "description": "Password or ssh key for the Virtual Machine."
+          }
+        },
+        "vmSize": {
+          "type": "string",
+          "defaultValue": "Standard_A2_v2",
+          "metadata": {
+            "description": "Size for the Virtual Machine."
+          }
+        },
+        "coordinators": {
+            "type": "string",
+            "defaultValue": "0",
+            "metadata": {
+              "description": "Number of coordinators in the cluster. There will be one master coordinator created aside these coordinator nodes."
+            }
+        },
+        "executors": {
+            "type": "string",
+            "defaultValue": "3",
+            "metadata": {
+              "description": "Number of executors in the cluster"
+            }
+        }
+    },
+    "variables": {
+      "baseURI": "https://raw.githubusercontent.com/Nirmalyasen/cloud-templates/master/dremio/azure/",
+      "apiVersion": "2018-05-01",
+      "shortName": "[take(deployment().name, 40)]",
+      "rgName": "[resourceGroup().name]",
+      "stateRgName": "[concat(resourceGroup().name, '-state')]",
+      "dataDiskName": "[concat(resourceGroup().name, '-data-disk')]",
+      "dataDiskId": "[concat(subscription().id, '/resourceGroups/', variables('stateRgName'), '/providers/Microsoft.Compute/disks/', variables('dataDiskName'))]"
+    },
+    "resources": [
+        {
+          "apiVersion": "[variables('apiVersion')]",
+          "name": "pid-1f30d282-b6d2-5dc6-9630-85533cc11b98",
+          "type": "Microsoft.Resources/deployments",
+          "properties": {
+            "mode": "Incremental",
+            "template": {
+              "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "resources": []
+            }
+          }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('apiVersion')]",
+            "name": "[concat(variables('shortName'), '-state-deployment')]",
+            "resourceGroup": "[variables('stateRgName')]",
+            "dependsOn": [
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                   "uri": "[concat(variables('baseURI'), 'dremioState.json')]",
+                   "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                   "dremioClusterName": {"value": "[resourceGroup().name]"},
+                   "dataDiskName": {"value": "[variables('dataDiskName')]"}
+                 }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "[variables('apiVersion')]",
+            "name": "[concat(variables('shortName'), '-compute-deployment')]",
+            "resourceGroup": "[variables('rgName')]",
+            "dependsOn": [
+                "[concat(variables('shortName'), '-state-deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                   "uri": "[concat(variables('baseURI'), 'dremioCluster.json')]",
+                   "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                   "dremioClusterName": {"value": "[resourceGroup().name]"},
+                   "executorCount": {"value": "[parameters('executors')]"},
+                   "coordinatorCount": {"value": "[parameters('coordinators')]"},
+                   "vmSize": {"value": "[parameters('vmSize')]"},
+                   "dataDiskId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.dataDiskId.value]"},
+                   "adminUsername": {"value": "[parameters('adminUsername')]"},
+                   "adminPasswordOrKey": {"value": "[parameters('adminPasswordOrKey')]"},
+                   "subnetId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.subnetId.value]"},
+                   "loadBalancerId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.loadBalancerId.value]"}
+                 }
+            }
+        }
+    ],
+    "outputs": {
+      "dremioUi": {
+        "type": "string",
+        "value": "[concat('http://', reference(concat(variables('shortName'), '-state-deployment')).outputs.dremioUIAddress.value, ':9047')]"
+      }
+    }
+}

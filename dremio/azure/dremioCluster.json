@@ -1,0 +1,495 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "centralus",
+      "metadata": {
+        "description": "Location for the resources."
+      }
+    },
+    "dremioClusterName": {
+      "type": "string",
+      "defaultValue": "dremio-cluster",
+      "metadata": {
+        "description": "Name for the Dremio Cluster"
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "User name for the Virtual Machine."
+      }
+    },
+    "authenticationType": {
+      "type": "string",
+      "defaultValue": "password",
+      "allowedValues": [
+        "password",
+        "sshPublicKey"
+      ],
+      "metadata": {
+        "description": "Type of authentication to use on the Virtual Machine."
+      }
+    },
+    "adminPasswordOrKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password or ssh key for the Virtual Machine."
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_A2_v2",
+      "metadata": {
+        "description": "Size for the Virtual Machine."
+      }
+    },
+    "storageNewOrExisting": {
+      "type": "string",
+      "defaultValue": "new",
+      "metadata": {
+        "description": "Determines whether or not a new storage account should be provisioned."
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "defaultValue": "[concat('storage', uniqueString(resourceGroup().id))]",
+      "metadata": {
+        "description": "Name of the storage account"
+      }
+    },
+    "storageAccountType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "metadata": {
+        "description": "Storage account type"
+      }
+    },
+    "storageAccountResourceGroupName": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().name]",
+      "metadata": {
+        "description": "Name of the resource group for the existing storage account"
+      }
+    },
+    "dataDiskId": {
+      "type": "string"
+    },
+    "publicIpNewOrExisting": {
+      "type": "string",
+      "defaultValue": "new",
+      "metadata": {
+        "description": "Determines whether or not a new public ip should be provisioned."
+      }
+    },
+    "publicIpName": {
+      "type": "string",
+      "defaultValue": "dremio-master-publicip",
+      "metadata": {
+        "description": "Name of the public ip address"
+      }
+    },
+    "publicIpDns": {
+      "type": "string",
+      "defaultValue": "[concat('linux-vm-', uniqueString(resourceGroup().id))]",
+      "metadata": {
+        "description": "DNS of the public ip address for the VM"
+      }
+    },
+    "publicIpResourceGroupName": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().name]",
+      "metadata": {
+        "description": "Name of the resource group for the public ip address"
+      }
+    },
+    "publicIpAllocationMethod": {
+      "type": "string",
+      "defaultValue": "Static",
+      "allowedValues": [
+        "Dynamic",
+        "Static"
+      ],
+      "metadata": {
+        "description": "Allocation method for the public ip address"
+      }
+    },
+    "publicIpSku": {
+      "type": "string",
+      "defaultValue": "Standard",
+      "allowedValues": [
+        "Basic",
+        "Standard"
+      ],
+      "metadata": {
+        "description": "Name of the resource group for the public ip address"
+      }
+    },
+    "coordinatorCount": {
+        "type": "string",
+        "defaultValue": "1",
+        "metadata": {
+          "description": "Number of coordinators in the cluster"
+        }
+    },
+    "executorCount": {
+        "type": "string",
+        "defaultValue": "3",
+        "metadata": {
+          "description": "Number of executors in the cluster"
+        }
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "The base URI where artifacts required by this template are located. When the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
+      },
+      "defaultValue": "[deployment().properties.templateLink.uri]"
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The sasToken required to access _artifactsLocation.  When the template is deployed using the accompanying scripts, a sasToken will be automatically generated."
+      },
+      "defaultValue": ""
+    },
+    "loadBalancerId": {
+      "type": "string"
+    },
+    "subnetId": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "computeApiVersion": "2018-06-01",
+    "storageApiVersion": "2018-07-01",
+    "nicName": "[concat(parameters('dremioClusterName'), '-nic')]",
+    "dremioImage": "[concat('/Subscriptions/', subscription().subscriptionId, '/Providers/Microsoft.Compute/Locations/', parameters('location'), '/Publishers/OpenLogic/ArtifactTypes/VMImage/Offers/CentOS/Skus/7.6/Versions/7.6.20181219')]",
+    "linuxConfiguration": {
+      "disablePasswordAuthentication": true,
+      "ssh": {
+        "publicKeys": [
+          {
+            "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
+            "keyData": "[parameters('adminPasswordOrKey')]"
+          }
+        ]
+      }
+    },
+    "publicIpAddressId": {
+      "id": "[resourceId(parameters('publicIpResourceGroupName'), 'Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]"
+    },
+    "networkSecurityGroupName": "dremio-nsg",
+    "networkSecurityGroupId": "[concat(subscription().id, '/resourceGroups/nsen-test-state/', '/Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]",
+    "singlePlacementGroup": "true",
+    "enableAcceleratedNetworking": "false",
+    "priority": "Regular",
+    "ipAllocationMethod": "Dynamic",
+    "upgradeMode": "Manual",
+    "namingInfix": "[toLower(substring(concat(parameters('dremioClusterName'), uniqueString(resourceGroup().id)), 0, 9))]",
+    "bePoolName": "[concat(variables('namingInfix'), 'bepool')]",
+    "baseURI": "https://raw.githubusercontent.com/Nirmalyasen/cloud-templates/master/dremio/azure/",
+    "scriptFileName": "setupDremio.sh",
+    "scriptURL": "[concat(variables('baseURI'), variables('scriptFileName'))]"
+  },
+  "resources": [
+    {
+      "condition": "[equals(parameters('storageNewOrExisting'), 'new')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "[variables('storageApiVersion')]",
+      "name": "[parameters('storageAccountName')]",
+      "location": "[parameters('location')]",
+      "kind": "Storage",
+      "sku": {
+        "name": "[parameters('storageAccountType')]"
+      }
+    },
+    {
+      "condition": "[equals(parameters('publicIpNewOrExisting'), 'new')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "[variables('computeApiVersion')]",
+      "name": "[parameters('publicIpName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "[parameters('publicIpAllocationMethod')]",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('publicIpDns')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "[variables('computeApiVersion')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('nicName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[parameters('publicIpName')]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig-master",
+            "properties": {
+              "privateIPAllocationMethod": "[variables('ipAllocationMethod')]",
+              "subnet": {
+                "id": "[parameters('subnetId')]"
+              },
+              "publicIPAddress": "[if(not(equals(parameters('publicIpNewOrExisting'), 'none')), variables('publicIpAddressId') , json('null'))]",
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[concat(parameters('loadBalancerId'), '/backendAddressPools/', variables('bePoolName'))]"
+                }
+              ]
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+          "id": "[variables('networkSecurityGroupId')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "[variables('computeApiVersion')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(parameters('dremioClusterName'), '-master')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[parameters('storageAccountName')]",
+        "[variables('nicName')]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('dremioClusterName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPasswordOrKey')]",
+          "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), json('null'), variables('linuxConfiguration'))]"
+        },
+        "storageProfile": {
+          "imageReference": {
+              "id": "[variables('dremioImage')]"
+          },
+          "osDisk": {
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          },
+          "dataDisks": [
+              {
+                "lun": 0,
+                "managedDisk": {
+                  "id": "[parameters('dataDiskId')]"
+                },
+                "caching": "ReadWrite",
+                "createOption": "Attach"
+              }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[reference(resourceId(parameters('storageAccountResourceGroupName'), 'Microsoft.Storage/storageAccounts/', parameters('storageAccountName')), variables('storageApiVersion')).primaryEndpoints.blob]"
+          }
+        }
+      },
+      "resources": [
+        {
+          "type": "extensions",
+          "name": "configScript",
+          "apiVersion": "[variables('computeApiVersion')]",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+            "[concat(parameters('dremioClusterName'), '-master')]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Azure.Extensions",
+            "type": "CustomScript",
+            "typeHandlerVersion": "2.0",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[variables('scriptURL')]"
+              ]
+            },
+            "protectedSettings": {
+              "commandToExecute": "[concat('bash ', variables('scriptFileName'), ' master ')]"
+            }
+          }
+        }
+      ]
+    },
+    {
+        "name": "[concat(parameters('dremioClusterName'), '-coordinators')]",
+        "type": "Microsoft.Compute/virtualMachineScaleSets",
+        "apiVersion": "[variables('computeApiVersion')]",
+        "location": "[parameters('location')]",
+        "dependsOn": ["[concat(parameters('dremioClusterName'), '-master')]"],
+        "sku": {
+            "name": "[parameters('vmSize')]",
+            "tier": "Standard",
+            "capacity": "[int(parameters('coordinatorCount'))]"
+        },
+        "properties": {
+            "overprovision": "true",
+            "upgradePolicy": {
+                "mode": "[variables('upgradeMode')]"
+            },
+            "singlePlacementGroup": "[variables('singlePlacementGroup')]",
+            "virtualMachineProfile": {
+                "storageProfile": {
+                    "imageReference": {
+                      "id": "[variables('dremioImage')]"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite"
+                    }
+                },
+                "priority": "[variables('priority')]",
+                "osProfile": {
+                    "computerNamePrefix": "[variables('namingInfix')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPasswordOrKey')]"
+                },
+                "networkProfile": {
+                    "networkInterfaceConfigurations": [
+                        {
+                            "name": "[concat(parameters('dremioClusterName'), 'Nic')]",
+                            "properties": {
+                                "primary": "true",
+                                "enableAcceleratedNetworking": "[variables('enableAcceleratedNetworking')]",
+                                "ipConfigurations": [
+                                    {
+                                        "name": "[concat(parameters('dremioClusterName'), 'ipconfig-coordinators')]",
+                                        "properties": {
+                                            "subnet": {
+                                                "id": "[parameters('subnetId')]"
+                                            },
+                                            "loadBalancerBackendAddressPools": [
+                                              {
+                                                "id": "[concat(parameters('loadBalancerId'), '/backendAddressPools/', variables('bePoolName'))]"
+                                              }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "extensionProfile": {
+                  "extensions": [
+                    {
+                      "name": "updatescriptextension",
+                      "properties": {
+                        "publisher": "Microsoft.Azure.Extensions",
+                        "type": "CustomScript",
+                        "typeHandlerVersion": "2.0",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                          "fileUris": [
+                            "[variables('scriptURL')]"
+                          ],
+                          "commandToExecute": "[concat('bash ', variables('scriptFileName'), ' coordinator ', reference(concat(parameters('dremioClusterName'), '-nic'), variables('computeApiVersion')).ipConfigurations[0].properties.privateIPAddress)]"
+                        }
+                      }
+                    }
+                  ]
+                }
+            }
+        }
+
+    },
+    {
+        "name": "[concat(parameters('dremioClusterName'), '-executors')]",
+        "type": "Microsoft.Compute/virtualMachineScaleSets",
+        "apiVersion": "[variables('computeApiVersion')]",
+        "location": "[parameters('location')]",
+        "dependsOn": ["[concat(parameters('dremioClusterName'), '-master')]"],
+        "sku": {
+            "name": "[parameters('vmSize')]",
+            "tier": "Standard",
+            "capacity": "[int(parameters('executorCount'))]"
+        },
+        "properties": {
+            "overprovision": "true",
+            "upgradePolicy": {
+                "mode": "[variables('upgradeMode')]"
+            },
+            "singlePlacementGroup": "[variables('singlePlacementGroup')]",
+            "virtualMachineProfile": {
+                "storageProfile": {
+                    "imageReference": {
+                      "id": "[variables('dremioImage')]"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite"
+                    }
+                },
+                "priority": "[variables('priority')]",
+                "osProfile": {
+                    "computerNamePrefix": "[variables('namingInfix')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPasswordOrKey')]"
+                },
+                "networkProfile": {
+                    "networkInterfaceConfigurations": [
+                        {
+                            "name": "[concat(parameters('dremioClusterName'), 'Nic')]",
+                            "properties": {
+                                "primary": "true",
+                                "enableAcceleratedNetworking": "[variables('enableAcceleratedNetworking')]",
+                                "ipConfigurations": [
+                                    {
+                                        "name": "[concat(parameters('dremioClusterName'), 'ipconfig-executors')]",
+                                        "properties": {
+                                            "subnet": {
+                                                "id": "[parameters('subnetId')]"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "extensionProfile": {
+                  "extensions": [
+                    {
+                      "name": "updatescriptextension",
+                      "properties": {
+                        "publisher": "Microsoft.Azure.Extensions",
+                        "type": "CustomScript",
+                        "typeHandlerVersion": "2.0",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                          "fileUris": [
+                            "[variables('scriptURL')]"
+                          ],
+                          "commandToExecute": "[concat('bash ', variables('scriptFileName'), ' executor ', reference(concat(parameters('dremioClusterName'), '-nic'), variables('computeApiVersion')).ipConfigurations[0].properties.privateIPAddress)]"
+                        }
+                      }
+                    }
+                  ]
+                }
+            }
+        }
+
+    }
+  ],
+  "outputs": {}
+}

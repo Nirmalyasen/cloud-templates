@@ -57,9 +57,9 @@
       "baseURI": "https://raw.githubusercontent.com/Nirmalyasen/cloud-templates/master/dremio/azure/",
       "apiVersion": "2018-05-01",
       "shortName": "[take(deployment().name, 40)]",
-      "rgName": "[resourceGroup().name]",
-      "stateRgName": "[concat(resourceGroup().name, '-state')]",
-      "dataDiskName": "[concat(resourceGroup().name, '-data-disk')]",
+      "rgName": "[deployment().name]",
+      "stateRgName": "[concat(deployment().name, '-state')]",
+      "dataDiskName": "[concat(deployment().name, '-data-disk')]",
       "dataDiskId": "[concat(subscription().id, '/resourceGroups/', variables('stateRgName'), '/providers/Microsoft.Compute/disks/', variables('dataDiskName'))]"
     },
     "resources": [
@@ -90,7 +90,7 @@
                    "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
-                   "dremioClusterName": {"value": "[resourceGroup().name]"},
+                   "dremioClusterName": {"value": "[deployment().name]"},
                    "dataDiskName": {"value": "[variables('dataDiskName')]"}
                  }
             }
@@ -110,7 +110,7 @@
                    "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
-                   "dremioClusterName": {"value": "[resourceGroup().name]"},
+                   "dremioClusterName": {"value": "[deployment().name]"},
                    "executorCount": {"value": "[parameters('executors')]"},
                    "coordinatorCount": {"value": "[parameters('coordinators')]"},
                    "vmSize": {"value": "[parameters('vmSize')]"},

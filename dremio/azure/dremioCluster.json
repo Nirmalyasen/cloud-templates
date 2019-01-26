@@ -166,7 +166,12 @@
     "computeApiVersion": "2018-06-01",
     "storageApiVersion": "2018-07-01",
     "nicName": "[concat(parameters('dremioClusterName'), '-nic')]",
-    "dremioImage": "[concat('/Subscriptions/', subscription().subscriptionId, '/Providers/Microsoft.Compute/Locations/', parameters('location'), '/Publishers/OpenLogic/ArtifactTypes/VMImage/Offers/CentOS/Skus/7.6/Versions/7.6.20181219')]",
+    "dremioImage": {
+      "publisher": "RedHat",
+      "offer": "RHEL",
+      "sku": "7.4",
+      "version": "latest"
+    },
     "linuxConfiguration": {
       "disablePasswordAuthentication": true,
       "ssh": {
@@ -273,9 +278,7 @@
           "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), json('null'), variables('linuxConfiguration'))]"
         },
         "storageProfile": {
-          "imageReference": {
-              "id": "[variables('dremioImage')]"
-          },
+          "imageReference": "[variables('dremioImage')]",
           "osDisk": {
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -350,9 +353,7 @@
             "singlePlacementGroup": "[variables('singlePlacementGroup')]",
             "virtualMachineProfile": {
                 "storageProfile": {
-                    "imageReference": {
-                      "id": "[variables('dremioImage')]"
-                    },
+                    "imageReference": "[variables('dremioImage')]",
                     "osDisk": {
                         "createOption": "FromImage",
                         "caching": "ReadWrite"

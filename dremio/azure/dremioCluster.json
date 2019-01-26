@@ -433,9 +433,7 @@
             "singlePlacementGroup": "[variables('singlePlacementGroup')]",
             "virtualMachineProfile": {
                 "storageProfile": {
-                    "imageReference": {
-                      "id": "[variables('dremioImage')]"
-                    },
+                    "imageReference": "[variables('dremioImage')]",
                     "osDisk": {
                         "createOption": "FromImage",
                         "caching": "ReadWrite"

@@ -2,13 +2,6 @@
   "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "location": {
-      "type": "string",
-      "defaultValue": "centralus",
-      "metadata": {
-        "description": "Location for the resources."
-      }
-    },
     "dremioClusterName": {
       "type": "string",
       "defaultValue": "dremio-cluster",
@@ -149,6 +142,7 @@
   "variables": {
     "computeApiVersion": "2018-06-01",
     "storageApiVersion": "2018-07-01",
+    "location": "[resourceGroup().location]",
     "nicName": "[concat(parameters('dremioClusterName'), '-nic')]",
     "publicIpAddressId": "[resourceId(parameters('publicIpResourceGroupName'), 'Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]",
     "networkSecurityGroupName": "dremio-nsg",
@@ -177,7 +171,7 @@
         },
         "name": "[parameters('dataDiskName')]",
         "apiVersion": "[variables('computeApiVersion')]",
-        "location": "[parameters('location')]",
+        "location": "[variables('location')]",
         "scale": null,
         "properties": {
             "creationData": {
@@ -191,7 +185,7 @@
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "[variables('computeApiVersion')]",
       "name": "[parameters('virtualNetworkName')]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "properties": {
         "addressSpace": {
           "addressPrefixes": "[parameters('addressPrefixes')]"
@@ -210,7 +204,7 @@
       "name": "[variables('networkSecurityGroupName')]",
       "type": "Microsoft.Network/networkSecurityGroups",
       "apiVersion": "[variables('computeApiVersion')]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "properties": {
         "securityRules": [
           {
@@ -260,7 +254,7 @@
       "type": "Microsoft.Network/publicIPAddresses",
       "apiVersion": "[variables('computeApiVersion')]",
       "name": "[parameters('publicIpName')]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "sku": {
         "name": "Standard"
       },
@@ -274,7 +268,7 @@
     {
       "type": "Microsoft.Network/loadBalancers",
       "name": "[variables('loadBalancerName')]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "apiVersion": "[variables('computeApiVersion')]",
       "sku": {
           "name": "Standard"

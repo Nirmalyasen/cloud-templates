@@ -3,15 +3,11 @@
     "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "location": {
-            "type": "string",
-            "defaultValue": "centralus"
-        },
-        "adminUsername": {
+        "sshUsername": {
           "type": "string",
           "defaultValue": "azuser",
           "metadata": {
-            "description": "User name for the Virtual Machine."
+            "description": "SSH username for the virtual machines."
           }
         },
         "authenticationType": {
@@ -22,20 +18,20 @@
             "sshPublicKey"
           ],
           "metadata": {
-            "description": "Type of authentication to use on the Virtual Machine."
+            "description": "Type of authentication to use on the virtual machines."
           }
         },
-        "adminPasswordOrKey": {
+        "sshPasswordOrKey": {
           "type": "securestring",
           "metadata": {
-            "description": "Password or ssh key for the Virtual Machine."
+            "description": "Password or ssh key for the virtual machines."
           }
         },
-        "vmSize": {
+        "coordinatorVmSize": {
           "type": "string",
           "defaultValue": "Standard_A2_v2",
           "metadata": {
-            "description": "Size for the Virtual Machine."
+            "description": "Size for the coordinator virtual machines."
           }
         },
         "coordinators": {
@@ -44,6 +40,13 @@
             "metadata": {
               "description": "Number of coordinators in the cluster. There will be one master coordinator created aside these coordinator nodes."
             }
+        },
+        "executorVmSize": {
+          "type": "string",
+          "defaultValue": "Standard_A2_v2",
+          "metadata": {
+            "description": "Size for the executor virtual machines."
+          }
         },
         "executors": {
             "type": "string",
@@ -58,25 +61,12 @@
       "apiVersion": "2018-05-01",
       "shortName": "[take(deployment().name, 40)]",
       "rgName": "[deployment().name]",
+      "location": "[resourceGroup().location]",
       "stateRgName": "[concat(deployment().name, '-state')]",
       "dataDiskName": "[concat(deployment().name, '-data-disk')]",
       "dataDiskId": "[concat(subscription().id, '/resourceGroups/', variables('stateRgName'), '/providers/Microsoft.Compute/disks/', variables('dataDiskName'))]"
     },
     "resources": [
-        {
-            "type": "Microsoft.Resources/resourceGroups",
-            "apiVersion": "2018-05-01",
-            "location": "[parameters('location')]",
-            "name": "[variables('rgName')]",
-            "properties": {}
-        },
-        {
-            "type": "Microsoft.Resources/resourceGroups",
-            "apiVersion": "2018-05-01",
-            "location": "[parameters('location')]",
-            "name": "[variables('stateRgName')]",
-            "properties": {}
-        },
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('apiVersion')]",
@@ -113,8 +103,9 @@
                 "parameters": {
                    "dremioClusterName": {"value": "[deployment().name]"},
                    "executorCount": {"value": "[parameters('executors')]"},
+                   "executorVmSize": {"value": "[parameters('executorVmSize')]"},
                    "coordinatorCount": {"value": "[parameters('coordinators')]"},
-                   "vmSize": {"value": "[parameters('vmSize')]"},
+                   "coordinatorVmSize": {"value": "[parameters('coordinatorVmSize')]"},
                    "dataDiskId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.dataDiskId.value]"},
                    "adminUsername": {"value": "[parameters('adminUsername')]"},
                    "adminPasswordOrKey": {"value": "[parameters('adminPasswordOrKey')]"},

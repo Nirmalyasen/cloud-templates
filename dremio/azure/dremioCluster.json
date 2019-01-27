@@ -2,13 +2,6 @@
   "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "location": {
-      "type": "string",
-      "defaultValue": "centralus",
-      "metadata": {
-        "description": "Location for the resources."
-      }
-    },
     "dremioClusterName": {
       "type": "string",
       "defaultValue": "dremio-cluster",
@@ -16,10 +9,10 @@
         "description": "Name for the Dremio Cluster"
       }
     },
-    "adminUsername": {
+    "sshUsername": {
       "type": "string",
       "metadata": {
-        "description": "User name for the Virtual Machine."
+        "description": "SSH username for the virtual machines."
       }
     },
     "authenticationType": {
@@ -30,20 +23,13 @@
         "sshPublicKey"
       ],
       "metadata": {
-        "description": "Type of authentication to use on the Virtual Machine."
+        "description": "Type of authentication to use on the virtual machines."
       }
     },
-    "adminPasswordOrKey": {
+    "sshPasswordOrKey": {
       "type": "securestring",
       "metadata": {
-        "description": "Password or ssh key for the Virtual Machine."
-      }
-    },
-    "vmSize": {
-      "type": "string",
-      "defaultValue": "Standard_A2_v2",
-      "metadata": {
-        "description": "Size for the Virtual Machine."
+        "description": "Password or ssh key for the virtual machines."
       }
     },
     "storageNewOrExisting": {
@@ -127,12 +113,26 @@
         "description": "Name of the resource group for the public ip address"
       }
     },
+    "coordinatorVmSize": {
+      "type": "string",
+      "defaultValue": "Standard_A2_v2",
+      "metadata": {
+        "description": "Size for the coordinator virtual machines."
+      }
+    },
     "coordinatorCount": {
         "type": "string",
         "defaultValue": "1",
         "metadata": {
           "description": "Number of coordinators in the cluster"
         }
+    },
+    "executorVmSize": {
+      "type": "string",
+      "defaultValue": "Standard_A2_v2",
+      "metadata": {
+        "description": "Size for the executor virtual machines."
+      }
     },
     "executorCount": {
         "type": "string",
@@ -165,6 +165,7 @@
   "variables": {
     "computeApiVersion": "2018-06-01",
     "storageApiVersion": "2018-07-01",
+    "location": "[resourceGroup().location]",
     "nicName": "[concat(parameters('dremioClusterName'), '-nic')]",
     "dremioImage": {
       "publisher": "OpenLogic",
@@ -177,8 +178,8 @@
       "ssh": {
         "publicKeys": [
           {
-            "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
-            "keyData": "[parameters('adminPasswordOrKey')]"
+            "path": "[concat('/home/', parameters('sshUsername'), '/.ssh/authorized_keys')]",
+            "keyData": "[parameters('sshPasswordOrKey')]"
           }
         ]
       }
@@ -205,7 +206,7 @@
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "[variables('storageApiVersion')]",
       "name": "[parameters('storageAccountName')]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "kind": "Storage",
       "sku": {
         "name": "[parameters('storageAccountType')]"
@@ -216,7 +217,7 @@
       "type": "Microsoft.Network/publicIPAddresses",
       "apiVersion": "[variables('computeApiVersion')]",
       "name": "[parameters('publicIpName')]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "sku": {
         "name": "Standard"
       },
@@ -231,7 +232,7 @@
       "apiVersion": "[variables('computeApiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[variables('nicName')]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "dependsOn": [
         "[parameters('publicIpName')]"
       ],
@@ -262,19 +263,19 @@
       "apiVersion": "[variables('computeApiVersion')]",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[concat(parameters('dremioClusterName'), '-master')]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "dependsOn": [
         "[parameters('storageAccountName')]",
         "[variables('nicName')]"
       ],
       "properties": {
         "hardwareProfile": {
-          "vmSize": "[parameters('vmSize')]"
+          "vmSize": "[parameters('coordinatorVmSize')]"
         },
         "osProfile": {
           "computerName": "[parameters('dremioClusterName')]",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPasswordOrKey')]",
+          "adminUsername": "[parameters('sshUsername')]",
+          "adminPassword": "[parameters('sshPasswordOrKey')]",
           "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), json('null'), variables('linuxConfiguration'))]"
         },
         "storageProfile": {
@@ -313,7 +314,7 @@
           "type": "extensions",
           "name": "configScript",
           "apiVersion": "[variables('computeApiVersion')]",
-          "location": "[parameters('location')]",
+          "location": "[variables('location')]",
           "dependsOn": [
             "[concat(parameters('dremioClusterName'), '-master')]"
           ],
@@ -338,10 +339,10 @@
         "name": "[concat(parameters('dremioClusterName'), '-coordinators')]",
         "type": "Microsoft.Compute/virtualMachineScaleSets",
         "apiVersion": "[variables('computeApiVersion')]",
-        "location": "[parameters('location')]",
+        "location": "[variables('location')]",
         "dependsOn": ["[concat(parameters('dremioClusterName'), '-master')]"],
         "sku": {
-            "name": "[parameters('vmSize')]",
+            "name": "[parameters('coordinatorVmSize')]",
             "tier": "Standard",
             "capacity": "[int(parameters('coordinatorCount'))]"
         },
@@ -362,8 +363,8 @@
                 "priority": "[variables('priority')]",
                 "osProfile": {
                     "computerNamePrefix": "[variables('namingInfix')]",
-                    "adminUsername": "[parameters('adminUsername')]",
-                    "adminPassword": "[parameters('adminPasswordOrKey')]"
+                    "adminUsername": "[parameters('sshUsername')]",
+                    "adminPassword": "[parameters('sshPasswordOrKey')]"
                 },
                 "networkProfile": {
                     "networkInterfaceConfigurations": [
@@ -418,10 +419,10 @@
         "name": "[concat(parameters('dremioClusterName'), '-executors')]",
         "type": "Microsoft.Compute/virtualMachineScaleSets",
         "apiVersion": "[variables('computeApiVersion')]",
-        "location": "[parameters('location')]",
+        "location": "[variables('location')]",
         "dependsOn": ["[concat(parameters('dremioClusterName'), '-master')]"],
         "sku": {
-            "name": "[parameters('vmSize')]",
+            "name": "[parameters('executorVmSize')]",
             "tier": "Standard",
             "capacity": "[int(parameters('executorCount'))]"
         },
@@ -442,8 +443,8 @@
                 "priority": "[variables('priority')]",
                 "osProfile": {
                     "computerNamePrefix": "[variables('namingInfix')]",
-                    "adminUsername": "[parameters('adminUsername')]",
-                    "adminPassword": "[parameters('adminPasswordOrKey')]"
+                    "adminUsername": "[parameters('sshUsername')]",
+                    "adminPassword": "[parameters('sshPasswordOrKey')]"
                 },
                 "networkProfile": {
                     "networkInterfaceConfigurations": [

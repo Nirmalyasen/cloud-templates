@@ -1,6 +1,6 @@
 #/bin/bash -e
 
-[ -z $DOWNLOAD_URL ] && DOWNLOAD_URL=http://download.dremio.com/community-server/3.0.0-201810262305460004-5c90d75/dremio-community-3.0.0-201810262305460004_5c90d75_1.noarch.rpm
+[ -z $DOWNLOAD_URL ] && DOWNLOAD_URL=http://download.dremio.com/community-server/3.1.0-201901172111160703-dc6f6e5/dremio-community-3.1.0-201901172111160703_dc6f6e5_1.noarch.rpm
 
 if [ ! -f /opt/dremio/bin/dremio ]; then
   command -v yum >/dev/null 2>&1 || { echo >&2 "This script works only on Centos or Red Hat. Aborting."; exit 1; }

@@ -6,22 +6,27 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
     AllowedPattern: ".+"
     ConstraintDescription: must select an existing EC2 KeyPair
-  instanceType:
-    Description: Same instance type is used for all the nodes.
-    Type: String
-    AllowedValues: [ t2.micro, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge, m4.16xlarge ]
-    Default: m4.xlarge
   diskSize:
     Description: GB - same disk size is used in all the nodes
     Type: Number
     Default: 100
+  coordinatorInstanceType:
+    Description: Same instance type is used for all the coordinators.
+    Type: String
+    AllowedValues: [ t2.micro, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge, m4.16xlarge ]
+    Default: m4.xlarge
   coordinatorCount:
     Description: There will be one master coordinator created aside these coordinator nodes.
     Type: Number
     Default: 0
+  executorInstanceType:
+    Description: Same instance type is used for all the executors.
+    Type: String
+    AllowedValues: [ t2.micro, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge, m4.16xlarge ]
+    Default: m4.xlarge
   executorCount:
     Type: Number
-    Default: 1
+    Default: 3
   s3bucket:
     Description: "Optional - leave empty to use local disk. https://docs.dremio.com/deployment/distributed-storage.html."
     Default: ""
@@ -52,7 +57,9 @@ Metadata:
         Label:
           default: Dremio Cluster Information - https://docs.dremio.com/deployment/node-roles.html
         Parameters:
+          - coordinatorInstanceType
           - coordinatorCount
+          - executorInstanceType
           - executorCount
           - dremioDownloadURL
       -
@@ -72,8 +79,10 @@ Metadata:
     ParameterLabels:
       keyName:
         default : "AWS keypair"
-      instanceType:
-        default: "AWS instance type"
+      coordinatorInstanceType:
+        default: "AWS instance type for coordinators"
+      executorInstanceType:
+        default: "AWS instance type for executors"
       diskSize:
         default: "Disk size"
       s3bucket:
@@ -91,17 +100,17 @@ Metadata:
 Mappings:
   Custom:
     Variables:
-      URL: http://download.dremio.com/community-server/3.0.0-201810262305460004-5c90d75/dremio-community-3.0.0-201810262305460004_5c90d75_1.noarch.rpm
+      URL: http://download.dremio.com/community-server/3.1.0-201901172111160703-dc6f6e5/dremio-community-3.1.0-201901172111160703_dc6f6e5_1.noarch.rpm
   RegionMap:
     # Centos Base Image us-east-2: ami-9c0638f9
     us-east-1: # N Virginia
-      AMI: ami-4bf3d731
+      AMI: ami-9887c6e7
     us-east-2: # Ohio
-      AMI: ami-e1496384
+      AMI: ami-9c0638f9
     us-west-1: # California
-      AMI: ami-65e0e305
+      AMI: ami-4826c22b
     us-west-2: # Oregon
-      AMI: ami-a042f4d8
+      AMI: ami-3ecc8f46
     # ca-central-1: # Québec
     #   AMI: ami-ac9a21c8
     # eu-central-1: # Frankfurt
@@ -241,7 +250,7 @@ Resources:
         - !Ref AWS::Region
         - AMI
       KeyName: !Ref keyName
-      InstanceType: !Ref instanceType
+      InstanceType: !Ref coordinatorInstanceType
       NetworkInterfaces:
         - DeleteOnTermination: "true"
           AssociatePublicIpAddress: "true"
@@ -315,7 +324,7 @@ Resources:
         - !Ref AWS::Region
         - AMI
       InstanceMonitoring: true
-      InstanceType: !Ref instanceType
+      InstanceType: !Ref coordinatorInstanceType
       KeyName: !Ref keyName
       SecurityGroups: [!GetAtt ["VPC", "DefaultSecurityGroup"], !Ref DremioSecurityGroup]
       BlockDeviceMappings:
@@ -391,7 +400,7 @@ Resources:
         - !Ref AWS::Region
         - AMI
       InstanceMonitoring: true
-      InstanceType: !Ref instanceType
+      InstanceType: !Ref executorInstanceType
       KeyName: !Ref keyName
       SecurityGroups: [!GetAtt ["VPC", "DefaultSecurityGroup"], !Ref DremioSecurityGroup]
       BlockDeviceMappings:

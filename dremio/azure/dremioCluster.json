@@ -167,10 +167,10 @@
     "storageApiVersion": "2018-07-01",
     "nicName": "[concat(parameters('dremioClusterName'), '-nic')]",
     "dremioImage": {
-      "publisher": "RedHat",
-      "offer": "RHEL",
-      "sku": "7.4",
-      "version": "latest"
+      "publisher": "OpenLogic",
+      "offer": "CentOS",
+      "sku": "7.5",
+      "version": "7.5.20180815"
     },
     "linuxConfiguration": {
       "disablePasswordAuthentication": true,

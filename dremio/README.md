@@ -28,6 +28,10 @@ Clone the git repo. Customize or change, if you need to. Then you can follow the
 ### Azure
  - Go to Azure Portal and search for "Template deployment"
  - Choose "Build your own template in the editor"
- - Choose "Load file" and load azure/mainTemplate.json. Save
+ - Choose "Load file" and load azure/mainTemplate.json. Save.
+    - mainTemplate.json  refers to dremioState.json and
+      dremioCluster.json directly in github. So, if you customize them,
+      you need to fork the github repo and upload your
+      changes there. And update the reference in mainTemplate.json.
  - Provide the required inputs on the page - deploy to a new resource group, agree to the terms and conditions and purchase
  - Once the deployment is successful, you will find the URL to Dremio UI in the output section

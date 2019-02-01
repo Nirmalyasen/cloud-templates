@@ -144,6 +144,9 @@
     "loadBalancerId": {
       "type": "string"
     },
+    "nsgId": {
+      "type": "string"
+    },
     "subnetId": {
       "type": "string"
     }
@@ -173,8 +176,6 @@
     "publicIpAddressId": {
       "id": "[resourceId(parameters('publicIpResourceGroupName'), 'Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]"
     },
-    "networkSecurityGroupName": "dremio-nsg",
-    "networkSecurityGroupId": "[concat(subscription().id, '/resourceGroups/', resourceGroup().name, '/Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]",
     "singlePlacementGroup": "true",
     "enableAcceleratedNetworking": "false",
     "priority": "Regular",
@@ -241,7 +242,7 @@
           }
         ],
         "networkSecurityGroup": {
-          "id": "[variables('networkSecurityGroupId')]"
+          "id": "[parameters('nsgId')]"
         }
       }
     },

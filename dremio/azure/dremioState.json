@@ -367,6 +367,10 @@
       "type": "string",
       "value": "[resourceId('Microsoft.Network/loadBalancers/', variables('loadBalancerName'))]"
     },
+    "nsgId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]"
+    },
     "dremioUIAddress": {
       "type": "string",
       "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', parameters('publicIpName')), variables('computeApiVersion')).dnsSettings.fqdn]"

@@ -117,7 +117,8 @@
                    "sshUsername": {"value": "[parameters('sshUsername')]"},
                    "sshPasswordOrKey": {"value": "[parameters('sshPasswordOrKey')]"},
                    "subnetId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.subnetId.value]"},
-                   "loadBalancerId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.loadBalancerId.value]"}
+                   "loadBalancerId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.loadBalancerId.value]"},
+                   "nsgId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.nsgId.value]"}
                  }
             }
         }

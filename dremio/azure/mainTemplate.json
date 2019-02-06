@@ -70,7 +70,7 @@
       "rgName": "[resourceGroup().name]",
       "location": "[resourceGroup().location]",
       "stateRgName": "[resourceGroup().name]",
-      "dataDiskName": "[concat(resourceGroup().name, '-data-disk')]",
+      "dataDiskName": "[concat(parameters('clusterName'), '-master-data-disk')]",
       "dataDiskId": "[concat(subscription().id, '/resourceGroups/', variables('stateRgName'), '/providers/Microsoft.Compute/disks/', variables('dataDiskName'))]"
     },
     "resources": [

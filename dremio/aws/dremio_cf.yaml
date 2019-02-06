@@ -100,7 +100,7 @@ Metadata:
 Mappings:
   Custom:
     Variables:
-      URL: http://download.dremio.com/community-server/3.1.0-201901172111160703-dc6f6e5/dremio-community-3.1.0-201901172111160703_dc6f6e5_1.noarch.rpm
+      URL: http://download.dremio.com/community-server/3.1.1-201901281837360699-30c9d74/dremio-community-3.1.1-201901281837360699_30c9d74_1.noarch.rpm
   RegionMap:
     # Centos Base Image us-east-2: ami-9c0638f9
     us-east-1: # N Virginia

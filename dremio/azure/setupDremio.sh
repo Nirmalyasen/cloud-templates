@@ -1,17 +1,22 @@
 #/bin/bash -e
 
+service=$1
+if [ -z "$service" ]; then
+   echo "Require the service to start - master, coordinator or executor"
+   exit 1
+fi
+
+if [ "$service" == "master" ]; then
+  DOWNLOAD_URL=$2
+else
+  DOWNLOAD_URL=$3
+fi
 [ -z $DOWNLOAD_URL ] && DOWNLOAD_URL=http://download.dremio.com/community-server/3.1.1-201901281837360699-30c9d74/dremio-community-3.1.1-201901281837360699_30c9d74_1.noarch.rpm
 if [ ! -f /opt/dremio/bin/dremio ]; then
   command -v yum >/dev/null 2>&1 || { echo >&2 "This script works only on Centos or Red Hat. Aborting."; exit 1; }
   yum install -y java-1.8.0-openjdk
   wget $DOWNLOAD_URL
   yum -y localinstall $(ls dremio-*)
-fi
-
-service=$1
-if [ -z "$service" ]; then
-   echo "Require the service to start - master, coordinator or executor"
-   exit 1
 fi
 
 DISK_NAME=/dev/sdc

@@ -319,7 +319,7 @@
               ]
             },
             "protectedSettings": {
-              "commandToExecute": "[concat('bash -c DOWNLOAD_URL=\"', parameters('dremioDownloadURL'), '\" ', variables('scriptFileName'), ' master ')]"
+              "commandToExecute": "[concat('bash ', variables('scriptFileName'), ' master ', ' \"', parameters('dremioDownloadURL'), '\"')]"
             }
           }
         }
@@ -395,7 +395,7 @@
                           "fileUris": [
                             "[variables('scriptURL')]"
                           ],
-                          "commandToExecute": "[concat('bash -c DOWNLOAD_URL=\"', parameters('dremioDownloadURL'), '\" ', variables('scriptFileName'), ' coordinator ', reference(concat(parameters('dremioClusterName'), '-nic'), variables('computeApiVersion')).ipConfigurations[0].properties.privateIPAddress)]"
+                          "commandToExecute": "[concat('bash ', parameters('dremioDownloadURL'), '\" ', variables('scriptFileName'), ' coordinator ', reference(concat(parameters('dremioClusterName'), '-nic'), variables('computeApiVersion')).ipConfigurations[0].properties.privateIPAddress, ' \"', parameters('dremioDownloadURL'), '\"')]"
                         }
                       }
                     }
@@ -470,7 +470,7 @@
                           "fileUris": [
                             "[variables('scriptURL')]"
                           ],
-                          "commandToExecute": "[concat('bash -c DOWNLOAD_URL=\"', parameters('dremioDownloadURL'), '\"', variables('scriptFileName'), ' executor ', reference(concat(parameters('dremioClusterName'), '-nic'), variables('computeApiVersion')).ipConfigurations[0].properties.privateIPAddress)]"
+                          "commandToExecute": "[concat('bash ', variables('scriptFileName'), ' executor ', reference(concat(parameters('dremioClusterName'), '-nic'), variables('computeApiVersion')).ipConfigurations[0].properties.privateIPAddress, ' \"', parameters('dremioDownloadURL'), '\"')]"
                         }
                       }
                     }

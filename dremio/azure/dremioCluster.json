@@ -395,7 +395,7 @@
                           "fileUris": [
                             "[variables('scriptURL')]"
                           ],
-                          "commandToExecute": "[concat('bash ', parameters('dremioDownloadURL'), '\" ', variables('scriptFileName'), ' coordinator ', reference(concat(parameters('dremioClusterName'), '-nic'), variables('computeApiVersion')).ipConfigurations[0].properties.privateIPAddress, ' \"', parameters('dremioDownloadURL'), '\"')]"
+                          "commandToExecute": "[concat('bash ', variables('scriptFileName'), ' coordinator ', reference(concat(parameters('dremioClusterName'), '-nic'), variables('computeApiVersion')).ipConfigurations[0].properties.privateIPAddress, ' \"', parameters('dremioDownloadURL'), '\"')]"
                         }
                       }
                     }

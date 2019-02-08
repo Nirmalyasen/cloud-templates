@@ -4,8 +4,8 @@
 if [ ! -f /opt/dremio/bin/dremio ]; then
   command -v yum >/dev/null 2>&1 || { echo >&2 "This script works only on Centos or Red Hat. Aborting."; exit 1; }
   yum install -y java-1.8.0-openjdk
-  wget $DOWNLOAD_URL
-  yum -y localinstall $(ls dremio-*)
+  wget $DOWNLOAD_URL -O dremio-download.rpm
+  yum -y localinstall dremio-download.rpm
 fi
 
 service=$1

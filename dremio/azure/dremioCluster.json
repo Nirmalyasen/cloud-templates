@@ -32,34 +32,6 @@
         "description": "Password or ssh key for the virtual machines."
       }
     },
-    "storageNewOrExisting": {
-      "type": "string",
-      "defaultValue": "new",
-      "metadata": {
-        "description": "Determines whether or not a new storage account should be provisioned."
-      }
-    },
-    "storageAccountName": {
-      "type": "string",
-      "defaultValue": "[concat('storage', uniqueString(resourceGroup().id))]",
-      "metadata": {
-        "description": "Name of the storage account"
-      }
-    },
-    "storageAccountType": {
-      "type": "string",
-      "defaultValue": "Standard_LRS",
-      "metadata": {
-        "description": "Storage account type"
-      }
-    },
-    "storageAccountResourceGroupName": {
-      "type": "string",
-      "defaultValue": "[resourceGroup().name]",
-      "metadata": {
-        "description": "Name of the resource group for the existing storage account"
-      }
-    },
     "dataDiskId": {
       "type": "string"
     },
@@ -141,19 +113,34 @@
           "description": "Number of executors in the cluster"
         }
     },
+    "dremioDownloadURL": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "(Optional) URL to download Dremio rpm. By default, it will install the latest CE version."
+      }
+    },
     "loadBalancerId": {
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "Loadbalancer fronting the coordinators"
+      }
     },
     "nsgId": {
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "The security group required - ports 9047, 31010 and 22(ssh) should be allowed"
+      }
     },
     "subnetId": {
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "The subnet in which the Dremio cluster is to be deployed"
+      }
     }
   },
   "variables": {
     "computeApiVersion": "2018-06-01",
-    "storageApiVersion": "2018-07-01",
     "location": "[resourceGroup().location]",
     "nicName": "[concat(parameters('dremioClusterName'), '-nic')]",
     "dremioImage": {
@@ -188,17 +175,6 @@
     "scriptURL": "[concat(variables('baseURI'), variables('scriptFileName'))]"
   },
   "resources": [
-    {
-      "condition": "[equals(parameters('storageNewOrExisting'), 'new')]",
-      "type": "Microsoft.Storage/storageAccounts",
-      "apiVersion": "[variables('storageApiVersion')]",
-      "name": "[parameters('storageAccountName')]",
-      "location": "[variables('location')]",
-      "kind": "Storage",
-      "sku": {
-        "name": "[parameters('storageAccountType')]"
-      }
-    },
     {
       "condition": "[equals(parameters('publicIpNewOrExisting'), 'new')]",
       "type": "Microsoft.Network/publicIPAddresses",
@@ -252,7 +228,6 @@
       "name": "[concat(parameters('dremioClusterName'), '-master')]",
       "location": "[variables('location')]",
       "dependsOn": [
-        "[parameters('storageAccountName')]",
         "[variables('nicName')]"
       ],
       "properties": {
@@ -288,12 +263,6 @@
               "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
             }
           ]
-        },
-        "diagnosticsProfile": {
-          "bootDiagnostics": {
-            "enabled": true,
-            "storageUri": "[reference(resourceId(parameters('storageAccountResourceGroupName'), 'Microsoft.Storage/storageAccounts/', parameters('storageAccountName')), variables('storageApiVersion')).primaryEndpoints.blob]"
-          }
         }
       },
       "resources": [
@@ -316,7 +285,7 @@
               ]
             },
             "protectedSettings": {
-              "commandToExecute": "[concat('bash ', variables('scriptFileName'), ' master ')]"
+              "commandToExecute": "[concat('DOWNLOAD_URL=\"', parameters('dremioDownloadURL'), '\" bash ', variables('scriptFileName'), ' master ')]"
             }
           }
         }
@@ -392,7 +361,7 @@
                           "fileUris": [
                             "[variables('scriptURL')]"
                           ],
-                          "commandToExecute": "[concat('bash ', variables('scriptFileName'), ' coordinator ', reference(concat(parameters('dremioClusterName'), '-nic'), variables('computeApiVersion')).ipConfigurations[0].properties.privateIPAddress)]"
+                          "commandToExecute": "[concat('DOWNLOAD_URL=\"', parameters('dremioDownloadURL'), '\" bash ', variables('scriptFileName'), ' coordinator ', reference(concat(parameters('dremioClusterName'), '-nic'), variables('computeApiVersion')).ipConfigurations[0].properties.privateIPAddress)]"
                         }
                       }
                     }
@@ -467,7 +436,7 @@
                           "fileUris": [
                             "[variables('scriptURL')]"
                           ],
-                          "commandToExecute": "[concat('bash ', variables('scriptFileName'), ' executor ', reference(concat(parameters('dremioClusterName'), '-nic'), variables('computeApiVersion')).ipConfigurations[0].properties.privateIPAddress)]"
+                          "commandToExecute": "[concat('DOWNLOAD_URL=\"', parameters('dremioDownloadURL'), '\" bash ', variables('scriptFileName'), ' executor ', reference(concat(parameters('dremioClusterName'), '-nic'), variables('computeApiVersion')).ipConfigurations[0].properties.privateIPAddress)]"
                         }
                       }
                     }

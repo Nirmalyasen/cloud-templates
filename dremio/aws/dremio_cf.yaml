@@ -40,7 +40,7 @@ Parameters:
     Default: ""
     Type: String
   dremioDownloadURL:
-    Description: "Optional - if empty, the latest Dremio published binaries are used."
+    Description: "Optional - if empty, the latest Dremio CE published binaries are used."
     Type: String
 Rules:
   s3BucketSpecified:
@@ -274,8 +274,8 @@ Resources:
             url=${dremioDownloadURL}
             [ -z $url ] && url=${DOWNLOAD_URL}
             yum -y install wget java-1.8.0-openjdk
-            wget $url
-            yum -y localinstall $(ls dremio-*)
+            wget $url -O dremio-download.rpm
+            yum -y localinstall dremio-download.rpm
             if [ $? != 0 ]; then
               echo "{ \"Status\" : \"FAILURE\", \"UniqueId\" : \"${AWS::StackName}\", \"Data\" : \"Failed\", \"Reason\" : \"Unable to download Dremio\" }" > $statusFile
               curl -T $statusFile '${AvailabilityWaitHandle}'

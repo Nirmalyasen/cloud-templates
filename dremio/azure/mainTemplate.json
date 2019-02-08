@@ -61,6 +61,13 @@
             "metadata": {
               "description": "Number of executors in the cluster"
             }
+        },
+        "dremioDownloadURL": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+              "description": "(Optional) URL to download Dremio rpm. By default, it will install the latest CE version."
+            }
         }
     },
     "variables": {
@@ -113,6 +120,7 @@
                    "executorVmSize": {"value": "[parameters('executorVmSize')]"},
                    "coordinatorCount": {"value": "[parameters('coordinators')]"},
                    "coordinatorVmSize": {"value": "[parameters('coordinatorVmSize')]"},
+                   "dremioDownloadURL": {"value": "[parameters('dremioDownloadURL')]"},
                    "dataDiskId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.dataDiskId.value]"},
                    "sshUsername": {"value": "[parameters('sshUsername')]"},
                    "sshPasswordOrKey": {"value": "[parameters('sshPasswordOrKey')]"},

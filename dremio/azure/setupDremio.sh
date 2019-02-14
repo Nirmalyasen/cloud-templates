@@ -40,7 +40,10 @@ if [ "$service" != "master" ]; then
   fi
 fi
 
-
+# Temp fix till resolved in base code
+mkdir -p /opt/dremio/run
+chown dremio:dremio /opt/dremio/run
+sed -i "s/DREMIO_PID_DIR=*/#DREMIO_PID_DIR=/" /opt/dremio/conf/dremio-env
 
 function setup_master {
 #  sed -i "s/local: .*/local: /var/lib/dremio"

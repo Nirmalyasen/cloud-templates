@@ -7,7 +7,7 @@
           "type": "string",
           "defaultValue": "mydremio",
           "metadata": {
-            "description": "Name of your Dremio cluster in Azure."
+            "description": "Dremio cluster name in Azure."
           }
         },
         "clusterSize": {

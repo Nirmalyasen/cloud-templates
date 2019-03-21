@@ -20,7 +20,11 @@ Clone the git repo. Customize or change, if you need to. Then you can follow the
 
 ### AWS
 
+<<<<<<< HEAD
 [![AWS Cloudformation](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://us-east-2.console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?templateURL=https://s3-us-west-2.amazonaws.com/aws-cloudformation.dremio.com/dremio_cf.yaml&stackName=myDremio)
+=======
+[![AWS Cloudformation](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://us-east-2.console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?templateURL=https://s3.us-east-2.amazonaws.com/aws-cloudformation.dremio.com/dremio_cf.yaml&stackName=myDremio)
+>>>>>>> eaac6d891ead1da802db62cda237908f5dc696a9
 
 - Go to AWS Console -> Cloudformation -> Create Stack
 - Select "Upload a template file" and choose aws/dremio_cf.yaml

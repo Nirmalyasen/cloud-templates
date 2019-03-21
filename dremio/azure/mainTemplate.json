@@ -7,7 +7,7 @@
           "type": "string",
           "defaultValue": "mydremio",
           "metadata": {
-            "description": "Give your cluster a name in Azure."
+            "description": "Name of your Dremio cluster in Azure."
           }
         },
         "clusterSize": {
@@ -15,14 +15,14 @@
           "defaultValue": "Small",
           "allowedValues": ["Small"],
           "metadata": {
-            "description": "Size of cluster."
+            "description": "The type and number of machines are chosen based on the size selected. For more details see <TBD>"
           }
         },
         "sshUsername": {
           "type": "string",
           "defaultValue": "azuser",
           "metadata": {
-            "description": "SSH username for the virtual machines."
+            "description": "SSH username for the virtual machines. You need it if you need to login to the machines."
           }
         },
         "authenticationType": {
@@ -43,11 +43,11 @@
           }
         },
         "dremioDownloadURL": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-              "description": "(Optional) URL to download Dremio rpm. By default, it will install the latest CE version."
-            }
+          "type": "string",
+          "defaultValue": "",
+          "metadata": {
+            "description": "Optional - if empty, the latest Dremio CE binaries are used. Must be http or https URL."
+          }
         }
     },
     "variables": {

@@ -13,43 +13,12 @@ Parameters:
   coordinatorInstanceType:
     Description: Same instance type is used for all the coordinators.
     Type: String
-    AllowedValues: [ t2.micro, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge, m4.16xlarge ]
-    Default: m4.xlarge
-  coordinatorCount:
-    Description: There will be one master coordinator created aside these coordinator nodes.
-    Type: Number
-    Default: 0
-  executorInstanceType:
-    Description: Same instance type is used for all the executors.
-    Type: String
-    AllowedValues: [ t2.micro, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge, m4.16xlarge ]
-    Default: m4.xlarge
-  executorCount:
-    Type: Number
-    Default: 3
-  s3bucket:
-    Description: "Optional - leave empty to use local disk. https://docs.dremio.com/deployment/distributed-storage.html."
-    Default: ""
-    Type: String
-  s3AWSKey:
-    Description: Required if a S3 bucket is provided
-    Default: ""
-    Type: String
-  s3AWSSecret:
-    Description: Required if a S3 bucket is provided
-    Default: ""
-    Type: String
+    Description: "The type and number of machines are chosen based on the size selected. For more details see <TBD>"
+    AllowedValues: ["Small"]
+    Default: Small
   dremioDownloadURL:
-    Description: "Optional - if empty, the latest Dremio CE published binaries are used."
     Type: String
-Rules:
-  s3BucketSpecified:
-    RuleCondition: !Not [!Equals [ !Ref s3bucket, "" ]]
-    Assertions:
-      - Assert:  !Not [ !Equals [ !Ref s3AWSKey, ""]]
-        AssertDescription: "S3 bucket specified. AWS key cannot be empty."
-      - Assert:  !Not [ !Equals [ !Ref s3AWSSecret, ""]]
-        AssertDescription: "S3 bucket specified. AWS key cannot be empty."
+    Description: "Optional - if empty, the latest Dremio CE binaries are used. Must be http or https URL."
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -79,24 +48,20 @@ Metadata:
     ParameterLabels:
       keyName:
         default : "AWS keypair"
-      coordinatorInstanceType:
-        default: "AWS instance type for coordinators"
-      executorInstanceType:
-        default: "AWS instance type for executors"
-      diskSize:
-        default: "Disk size"
-      s3bucket:
-        default: S3 bucket name - including directory path
-      s3AWSKey:
-        default: "AWS Key"
-      s3AWSSecret:
-        default: "AWS Secret"
-      coordinatorCount:
-        default: "Number of cooordinator nodes"
-      executorCount:
-        default: "Number of executor nodes"
+      # coordinatorInstanceType:
+      #   default: "AWS instance type for coordinators"
+      # executorInstanceType:
+      #   default: "AWS instance type for executors"
+      # diskSize:
+      #   default: "Disk size"
+      # coordinatorCount:
+      #   default: "Number of cooordinator nodes"
+      # executorCount:
+      #   default: "Number of executor nodes"
+      clusterSize:
+        default: "Cluster size"
       dremioDownloadURL:
-        default: URL for Dremio binary
+        default: "Dremio binary URL"
 Mappings:
   Custom:
     Variables:

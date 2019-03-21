@@ -39,5 +39,7 @@ Clone the git repo. Customize or change, if you need to. Then you can follow the
       dremioCluster.json directly in github. So, if you customize them,
       you need to fork the github repo and upload your
       changes there. And update the reference in mainTemplate.json.
- - Provide the required inputs on the page - deploy to a new resource group, agree to the terms and conditions and purchase
+ - Provide the required inputs on the page
+    - Deploy to a new resource group. It helps in deleting the cluster - you can delete the resource group.
+    - Agree to the terms and conditions and purchase.
  - Once the deployment is successful, you will find the URL to Dremio UI in the output section

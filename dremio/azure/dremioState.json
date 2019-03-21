@@ -16,6 +16,13 @@
         "description": "Name for the Dremio Master Data Disk"
       }
     },
+    "dataDiskSize": {
+      "type": "int",
+      "defaultValue": 20,
+      "metadata": {
+        "description": "Size of the Dremio Master Data Disk"
+      }
+    },
     "storageNewOrExisting": {
       "type": "string",
       "defaultValue": "new",
@@ -177,7 +184,7 @@
             "creationData": {
                 "createOption": "Empty"
             },
-            "diskSizeGB": 20
+            "diskSizeGB": "[parameters('dataDiskSize')]"
         }
     },
     {

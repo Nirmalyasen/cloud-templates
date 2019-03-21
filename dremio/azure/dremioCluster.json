@@ -93,8 +93,8 @@
       }
     },
     "coordinatorCount": {
-        "type": "string",
-        "defaultValue": "1",
+        "type": "int",
+        "defaultValue": 0,
         "metadata": {
           "description": "Number of coordinators in the cluster"
         }
@@ -107,8 +107,8 @@
       }
     },
     "executorCount": {
-        "type": "string",
-        "defaultValue": "3",
+        "type": "int",
+        "defaultValue": 3,
         "metadata": {
           "description": "Number of executors in the cluster"
         }
@@ -300,7 +300,7 @@
         "sku": {
             "name": "[parameters('coordinatorVmSize')]",
             "tier": "Standard",
-            "capacity": "[int(parameters('coordinatorCount'))]"
+            "capacity": "[parameters('coordinatorCount')]"
         },
         "properties": {
             "overprovision": "true",
@@ -380,7 +380,7 @@
         "sku": {
             "name": "[parameters('executorVmSize')]",
             "tier": "Standard",
-            "capacity": "[int(parameters('executorCount'))]"
+            "capacity": "[parameters('executorCount')]"
         },
         "properties": {
             "overprovision": "true",

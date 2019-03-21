@@ -33,7 +33,7 @@ You can clone the repo and manually try it out on AWS:
 
 Try it out [![Azure ARM Template](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/microsoft.template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FNirmalyasen%2Fcloud-templates%2Fmaster%2Fdremio%2Fazure%2FmainTemplate.json)
 
-You can clone the repo and manually try it out on AWS:
+You can clone the repo and manually try it out on Azure:
  - Go to Azure Portal and search for "Template deployment"
  - Choose "Build your own template in the editor"
  - Choose "Load file" and load azure/mainTemplate.json. Save.

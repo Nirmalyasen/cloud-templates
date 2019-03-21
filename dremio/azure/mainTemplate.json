@@ -10,6 +10,14 @@
             "description": "Give your cluster a name in Azure."
           }
         },
+        "clusterSize": {
+          "type": "string",
+          "defaultValue": "Small",
+          "allowedValues": ["Small"],
+          "metadata": {
+            "description": "Size of cluster."
+          }
+        },
         "sshUsername": {
           "type": "string",
           "defaultValue": "azuser",
@@ -34,34 +42,6 @@
             "description": "Password or ssh key for the virtual machines."
           }
         },
-        "coordinatorVmSize": {
-          "type": "string",
-          "defaultValue": "Standard_A2_v2",
-          "metadata": {
-            "description": "Size for the coordinator virtual machines."
-          }
-        },
-        "coordinators": {
-            "type": "string",
-            "defaultValue": "0",
-            "metadata": {
-              "description": "Number of coordinators in the cluster. There will be one master coordinator created aside these coordinator nodes. It is ok to have zero coordinators. "
-            }
-        },
-        "executorVmSize": {
-          "type": "string",
-          "defaultValue": "Standard_A2_v2",
-          "metadata": {
-            "description": "Size for the executor virtual machines."
-          }
-        },
-        "executors": {
-            "type": "string",
-            "defaultValue": "3",
-            "metadata": {
-              "description": "Number of executors in the cluster"
-            }
-        },
         "dremioDownloadURL": {
             "type": "string",
             "defaultValue": "",
@@ -78,9 +58,31 @@
       "location": "[resourceGroup().location]",
       "stateRgName": "[resourceGroup().name]",
       "dataDiskName": "[concat(parameters('clusterName'), '-master-data-disk')]",
-      "dataDiskId": "[concat(subscription().id, '/resourceGroups/', variables('stateRgName'), '/providers/Microsoft.Compute/disks/', variables('dataDiskName'))]"
+      "dataDiskId": "[concat(subscription().id, '/resourceGroups/', variables('stateRgName'), '/providers/Microsoft.Compute/disks/', variables('dataDiskName'))]",
+      "clusterSizes": {
+        "Small": {
+          "coordinatorVmSize": "Standard_A2_v2",
+          "coordinatorCount": 0,
+          "executorVmSize": "Standard_A2_v2",
+          "executorCount": 3,
+          "metadataDiskSize": 100
+        }
+      }
     },
     "resources": [
+        {
+          "apiVersion": "2018-02-01",
+          "name": "pid-1f30d282-b6d2-5dc6-9630-85533cc11b98",
+          "type": "Microsoft.Resources/deployments",
+          "properties": {
+            "mode": "Incremental",
+            "template": {
+              "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "resources": []
+            }
+          }
+        },
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('apiVersion')]",
@@ -96,7 +98,8 @@
                 },
                 "parameters": {
                    "dremioClusterName": {"value": "[parameters('clusterName')]"},
-                   "dataDiskName": {"value": "[variables('dataDiskName')]"}
+                   "dataDiskName": {"value": "[variables('dataDiskName')]"},
+                   "dataDiskSize": {"value": "[variables('clusterSizes')[parameters('clusterSize')].metadataDiskSize]"}
                  }
             }
         },
@@ -116,10 +119,10 @@
                 },
                 "parameters": {
                    "dremioClusterName": {"value": "[parameters('clusterName')]"},
-                   "executorCount": {"value": "[parameters('executors')]"},
-                   "executorVmSize": {"value": "[parameters('executorVmSize')]"},
-                   "coordinatorCount": {"value": "[parameters('coordinators')]"},
-                   "coordinatorVmSize": {"value": "[parameters('coordinatorVmSize')]"},
+                   "executorCount": {"value": "[variables('clusterSizes')[parameters('clusterSize')].executorCount]"},
+                   "executorVmSize": {"value": "[variables('clusterSizes')[parameters('clusterSize')].executorVmSize]"},
+                   "coordinatorCount": {"value": "[variables('clusterSizes')[parameters('clusterSize')].coordinatorCount]"},
+                   "coordinatorVmSize": {"value": "[variables('clusterSizes')[parameters('clusterSize')].coordinatorVmSize]"},
                    "dremioDownloadURL": {"value": "[parameters('dremioDownloadURL')]"},
                    "dataDiskId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.dataDiskId.value]"},
                    "sshUsername": {"value": "[parameters('sshUsername')]"},

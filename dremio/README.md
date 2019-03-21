@@ -19,6 +19,9 @@ You can shut down the VMs to shut down your cluster. And bring them up to restar
 Clone the git repo. Customize or change, if you need to. Then you can follow the instructions below. These are UI based instructions - you can use the command line to deploy too.
 
 ### AWS
+
+[![AWS Cloudformation](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://us-east-2.console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?templateURL=https://s3-us-west-2.amazonaws.com/aws-cloudformation.dremio.com/dremio_cf.yaml&stackName=myDremio)
+
 - Go to AWS Console -> Cloudformation -> Create Stack
 - Select "Upload a template file" and choose aws/dremio_cf.yaml
 - Provide the required inputs on the next page
@@ -26,6 +29,9 @@ Clone the git repo. Customize or change, if you need to. Then you can follow the
 - Once the stack is ready, you will find the URL to Dremio UI in output section of the stack
 
 ### Azure
+
+[![Azure ARM Template](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/microsoft.template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FNirmalyasen%2Fcloud-templates%2Fmaster%2Fdremio%2Fazure%2FmainTemplate.json)
+
  - Go to Azure Portal and search for "Template deployment"
  - Choose "Build your own template in the editor"
  - Choose "Load file" and load azure/mainTemplate.json. Save.

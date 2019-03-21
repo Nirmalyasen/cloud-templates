@@ -6,12 +6,28 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
     AllowedPattern: ".+"
     ConstraintDescription: must select an existing EC2 KeyPair
-  diskSize:
-    Description: GB - same disk size is used in all the nodes
-    Type: Number
-    Default: 100
-  coordinatorInstanceType:
-    Description: Same instance type is used for all the coordinators.
+  # diskSize:
+  #   Description: GB - same disk size is used in all the nodes
+  #   Type: Number
+  #   Default: 100
+  # coordinatorInstanceType:
+  #   Description: Same instance type is used for all the coordinators.
+  #   Type: String
+  #   AllowedValues: [ t2.micro, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge, m4.16xlarge ]
+  #   Default: m4.xlarge
+  # coordinatorCount:
+  #   Description: There will be one master coordinator created aside these coordinator nodes.
+  #   Type: Number
+  #   Default: 0
+  # executorInstanceType:
+  #   Description: Same instance type is used for all the executors.
+  #   Type: String
+  #   AllowedValues: [ t2.micro, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge, m4.16xlarge ]
+  #   Default: m4.xlarge
+  # executorCount:
+  #   Type: Number
+  #   Default: 3
+  clusterSize:
     Type: String
     Description: "The type and number of machines are chosen based on the size selected. For more details see <TBD>"
     AllowedValues: ["Small"]
@@ -24,27 +40,19 @@ Metadata:
     ParameterGroups:
       -
         Label:
-          default: Dremio Cluster Information - https://docs.dremio.com/deployment/node-roles.html
+          default: Dremio Cluster 
         Parameters:
           - coordinatorInstanceType
           - coordinatorCount
           - executorInstanceType
           - executorCount
+          - clusterSize
           - dremioDownloadURL
-      -
-        Label:
-          default: Optional S3 bucket for Dremio data
-        Parameters:
-          - s3bucket
-          - s3AWSKey
-          - s3AWSSecret
       -
         Label:
           default: AWS resource configuration
         Parameters:
           - keyName
-          - instanceType
-          - diskSize
     ParameterLabels:
       keyName:
         default : "AWS keypair"
@@ -61,11 +69,19 @@ Metadata:
       clusterSize:
         default: "Cluster size"
       dremioDownloadURL:
-        default: "Dremio binary URL"
+        default: "Dremio download URL"
 Mappings:
   Custom:
     Variables:
       URL: http://download.dremio.com/community-server/3.1.1-201901281837360699-30c9d74/dremio-community-3.1.1-201901281837360699_30c9d74_1.noarch.rpm
+  ClusterSize:
+    Small:
+      coordinatorInstanceType: m4.xlarge
+      coordinatorCount: 0
+      coordinatorDiskSize: 100
+      executorInstanceType: m4.xlarge
+      executorCount: 3
+      executorDiskSize: 100
   RegionMap:
     # Centos Base Image us-east-2: ami-9c0638f9
     us-east-1: # N Virginia
@@ -109,11 +125,7 @@ Resources:
     Properties:
       EnableDnsSupport: 'true'
       EnableDnsHostnames: 'true'
-      CidrBlock:
-        Fn::FindInMap:
-        - SubnetConfig
-        - VPC
-        - CIDR
+      CidrBlock: !FindInMap [SubnetConfig, VPC, CIDR]
       Tags:
       - Key: Name
         Value: !Join ["-", [!Ref "AWS::StackName", "net"]]
@@ -121,11 +133,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock:
-        Fn::FindInMap:
-        - SubnetConfig
-        - Public
-        - CIDR
+      CidrBlock: !FindInMap [SubnetConfig, Public, CIDR]
       Tags:
       - Key: Name
         Value: !Join ["-", [!Ref "AWS::StackName", "public"]]
@@ -209,13 +217,9 @@ Resources:
       Tags:
         - Key: Name
           Value: !Join ["-", [!Ref "AWS::StackName", "DremioMaster"]]
-      ImageId:
-        Fn::FindInMap:
-        - RegionMap
-        - !Ref AWS::Region
-        - AMI
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
       KeyName: !Ref keyName
-      InstanceType: !Ref coordinatorInstanceType
+      InstanceType: !FindInMap [ClusterSize, !Ref clusterSize, coordinatorInstanceType]
       NetworkInterfaces:
         - DeleteOnTermination: "true"
           AssociatePublicIpAddress: "true"
@@ -225,7 +229,7 @@ Resources:
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeSize: !Ref diskSize
+            VolumeSize: !FindInMap [ClusterSize, !Ref clusterSize, coordinatorDiskSize]
             DeleteOnTermination: true
             VolumeType: gp2
       UserData:
@@ -233,9 +237,7 @@ Resources:
           - |
             #!/bin/bash -x
             statusFile=/tmp/statusfile
-            s3bucket=${s3bucket}
-            s3AWSKey=${s3AWSKey}
-            s3AWSSecret=${s3AWSSecret}
+
             url=${dremioDownloadURL}
             [ -z $url ] && url=${DOWNLOAD_URL}
             yum -y install wget java-1.8.0-openjdk
@@ -248,23 +250,6 @@ Resources:
             fi
 
             DREMIO_CONFIG_FILE=/etc/dremio/dremio.conf
-
-            if [[ $s3bucket != "" ]]; then
-            cat <<EOM > /opt/dremio/conf/core-site.xml
-            <?xml version="1.0"?>
-            <configuration>
-               <property>
-                   <name>fs.s3a.access.key</name>
-                   <value>$s3AWSKey</value>
-               </property>
-               <property>
-                   <name>fs.s3a.secret.key</name>
-                   <value>$s3AWSSecret</value>
-               </property>
-            </configuration>
-            EOM
-            sed -i "s/#dist: .*/dist: \"s3a:\/\/$s3bucket\"/" $DREMIO_CONFIG_FILE
-            fi
 
             sed -i "s/executor.enabled: true/executor.enabled: false/" $DREMIO_CONFIG_FILE
             service dremio start
@@ -283,28 +268,21 @@ Resources:
     Properties:
       AssociatePublicIpAddress: true
       #EbsOptimized: true
-      ImageId:
-        Fn::FindInMap:
-        - RegionMap
-        - !Ref AWS::Region
-        - AMI
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
       InstanceMonitoring: true
-      InstanceType: !Ref coordinatorInstanceType
+      InstanceType: !FindInMap [ClusterSize, !Ref clusterSize, coordinatorInstanceType]
       KeyName: !Ref keyName
       SecurityGroups: [!GetAtt ["VPC", "DefaultSecurityGroup"], !Ref DremioSecurityGroup]
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeSize: !Ref diskSize
+            VolumeSize: !FindInMap [ClusterSize, !Ref clusterSize, coordinatorDiskSize]
             DeleteOnTermination: true
             VolumeType: gp2
       UserData:
         Fn::Base64: !Sub
           - |
             #!/bin/bash -x
-            s3bucket=${s3bucket}
-            s3AWSKey=${s3AWSKey}
-            s3AWSSecret=${s3AWSSecret}
             url=${dremioDownloadURL}
             [ -z $url ] && url=${DOWNLOAD_URL}
             yum -y install wget java-1.8.0-openjdk
@@ -312,23 +290,6 @@ Resources:
             yum -y localinstall $(ls dremio-*)
 
             DREMIO_CONFIG_FILE=/etc/dremio/dremio.conf
-
-            if [[ $s3bucket != "" ]]; then
-            cat <<EOM > /opt/dremio/conf/core-site.xml
-            <?xml version="1.0"?>
-            <configuration>
-               <property>
-                   <name>fs.s3a.access.key</name>
-                   <value>$s3AWSKey</value>
-               </property>
-               <property>
-                   <name>fs.s3a.secret.key</name>
-                   <value>$s3AWSSecret</value>
-               </property>
-            </configuration>
-            EOM
-            sed -i "s/#dist: .*/dist: \"s3a:\/\/$s3bucket\"/" $DREMIO_CONFIG_FILE
-            fi
 
             sed -i "s/coordinator.master.enabled: true/coordinator.master.enabled: false/; s/executor.enabled: true/executor.enabled: false/" $DREMIO_CONFIG_FILE
             echo "zookeeper: \"${ZK}:2181\"" >> $DREMIO_CONFIG_FILE
@@ -349,9 +310,9 @@ Resources:
           ResourceId: !Ref "AWS::StackName"
       LaunchConfigurationName: !Ref DremioCoordinatorLC
       VPCZoneIdentifier: [!Ref PublicSubnet]
-      DesiredCapacity: !Ref coordinatorCount
-      MaxSize: !Ref coordinatorCount
-      MinSize: !Ref coordinatorCount
+      DesiredCapacity: !FindInMap [ClusterSize, !Ref clusterSize, coordinatorCount]
+      MaxSize: !FindInMap [ClusterSize, !Ref clusterSize, coordinatorCount]
+      MinSize: !FindInMap [ClusterSize, !Ref clusterSize, coordinatorCount]
 
   DremioExecutorLC:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -365,22 +326,20 @@ Resources:
         - !Ref AWS::Region
         - AMI
       InstanceMonitoring: true
-      InstanceType: !Ref executorInstanceType
+      InstanceType: !FindInMap [ClusterSize, !Ref clusterSize, executorInstanceType]
       KeyName: !Ref keyName
       SecurityGroups: [!GetAtt ["VPC", "DefaultSecurityGroup"], !Ref DremioSecurityGroup]
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeSize: !Ref diskSize
+            VolumeSize: !FindInMap [ClusterSize, !Ref clusterSize, executorDiskSize]
             DeleteOnTermination: true
             VolumeType: gp2
       UserData:
         Fn::Base64: !Sub
           - |
             #!/bin/bash -x
-            s3bucket=${s3bucket}
-            s3AWSKey=${s3AWSKey}
-            s3AWSSecret=${s3AWSSecret}
+
             url=${dremioDownloadURL}
             [ -z $url ] && url=${DOWNLOAD_URL}
             yum -y install wget java-1.8.0-openjdk
@@ -388,23 +347,6 @@ Resources:
             yum -y localinstall $(ls dremio-*)
 
             DREMIO_CONFIG_FILE=/etc/dremio/dremio.conf
-
-            if [[ $s3bucket != "" ]]; then
-            cat <<EOM > /opt/dremio/conf/core-site.xml
-            <?xml version="1.0"?>
-            <configuration>
-               <property>
-                   <name>fs.s3a.access.key</name>
-                   <value>$s3AWSKey</value>
-               </property>
-               <property>
-                   <name>fs.s3a.secret.key</name>
-                   <value>$s3AWSSecret</value>
-               </property>
-            </configuration>
-            EOM
-            sed -i "s/#dist: .*/dist: \"s3a:\/\/$s3bucket\"/" $DREMIO_CONFIG_FILE
-            fi
 
             sed -i "s/coordinator.master.enabled: true/coordinator.master.enabled: false/; s/coordinator.enabled: true/coordinator.enabled: false/" $DREMIO_CONFIG_FILE
             echo "zookeeper: \"${ZK}:2181\"" >> $DREMIO_CONFIG_FILE
@@ -425,9 +367,9 @@ Resources:
           ResourceId: !Ref "AWS::StackName"
       LaunchConfigurationName: !Ref DremioExecutorLC
       VPCZoneIdentifier: [!Ref PublicSubnet]
-      DesiredCapacity: !Ref executorCount
-      MaxSize: !Ref executorCount
-      MinSize: !Ref executorCount
+      DesiredCapacity: !FindInMap [ClusterSize, !Ref clusterSize, executorCount]
+      MaxSize: !FindInMap [ClusterSize, !Ref clusterSize, executorCount]
+      MinSize: !FindInMap [ClusterSize, !Ref clusterSize, executorCount]
 
 Outputs:
   DremioUI:

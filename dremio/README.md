@@ -18,6 +18,14 @@ You can shut down the VMs to shut down your cluster. And bring them up to restar
 
 Clone the git repo. Customize or change, if you need to. Then you can follow the instructions below. These are UI based instructions - you can use the command line to deploy too.
 
+# Updating configuration of the Dremio cluster
+
+Once a cluster has been setup, you can ssh to the hosts and update configuration of the cluster. Configuration instructions are documented [here](https://docs.dremio.com/deployment/README-config.html).
+
+# Upgrade of the Dremio cluster
+
+You can follow the [upgrade instructions](https://docs.dremio.com/advanced-administration/upgrade/rpm.html) to upgrade the cluster.
+
 ### AWS
 
 Try it out [![AWS Cloudformation](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://us-east-2.console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?templateURL=https://s3-us-west-2.amazonaws.com/aws-cloudformation.dremio.com/dremio_cf.yaml&stackName=myDremio)

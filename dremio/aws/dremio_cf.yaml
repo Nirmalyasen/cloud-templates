@@ -6,27 +6,6 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
     AllowedPattern: ".+"
     ConstraintDescription: must select an existing EC2 KeyPair
-  # diskSize:
-  #   Description: GB - same disk size is used in all the nodes
-  #   Type: Number
-  #   Default: 100
-  # coordinatorInstanceType:
-  #   Description: Same instance type is used for all the coordinators.
-  #   Type: String
-  #   AllowedValues: [ t2.micro, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge, m4.16xlarge ]
-  #   Default: m4.xlarge
-  # coordinatorCount:
-  #   Description: There will be one master coordinator created aside these coordinator nodes.
-  #   Type: Number
-  #   Default: 0
-  # executorInstanceType:
-  #   Description: Same instance type is used for all the executors.
-  #   Type: String
-  #   AllowedValues: [ t2.micro, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge, m4.16xlarge ]
-  #   Default: m4.xlarge
-  # executorCount:
-  #   Type: Number
-  #   Default: 3
   clusterSize:
     Type: String
     Description: "The type and number of machines are chosen based on the size selected. For more details see <TBD>"
@@ -40,7 +19,7 @@ Metadata:
     ParameterGroups:
       -
         Label:
-          default: Dremio Cluster 
+          default: Dremio Cluster
         Parameters:
           - coordinatorInstanceType
           - coordinatorCount
@@ -56,16 +35,6 @@ Metadata:
     ParameterLabels:
       keyName:
         default : "AWS keypair"
-      # coordinatorInstanceType:
-      #   default: "AWS instance type for coordinators"
-      # executorInstanceType:
-      #   default: "AWS instance type for executors"
-      # diskSize:
-      #   default: "Disk size"
-      # coordinatorCount:
-      #   default: "Number of cooordinator nodes"
-      # executorCount:
-      #   default: "Number of executor nodes"
       clusterSize:
         default: "Cluster size"
       dremioDownloadURL:
@@ -73,7 +42,7 @@ Metadata:
 Mappings:
   Custom:
     Variables:
-      URL: http://download.dremio.com/community-server/3.1.1-201901281837360699-30c9d74/dremio-community-3.1.1-201901281837360699_30c9d74_1.noarch.rpm
+      URL: http://download.dremio.com/community-server/dremio-community-LATEST.noarch.rpm
   ClusterSize:
     Small:
       coordinatorInstanceType: m4.xlarge
@@ -83,35 +52,35 @@ Mappings:
       executorCount: 3
       executorDiskSize: 100
   RegionMap:
-    # Centos Base Image us-east-2: ami-9c0638f9
+    # Centos 7 Images
     us-east-1: # N Virginia
-      AMI: ami-9887c6e7
+      AMI: ami-02eac2c0129f6376b
     us-east-2: # Ohio
-      AMI: ami-9c0638f9
+      AMI: ami-0f2b4fc905b0bd1f1
     us-west-1: # California
-      AMI: ami-4826c22b
+      AMI: ami-074e2d6769f445be5
     us-west-2: # Oregon
-      AMI: ami-3ecc8f46
-    # ca-central-1: # Québec
-    #   AMI: ami-ac9a21c8
-    # eu-central-1: # Frankfurt
-    #   AMI: ami-627bf80d
-    # eu-west-1: # Ireland
-    #   AMI: ami-9802b7e1
-    # eu-west-2: # London
-    #   AMI: ami-27223d43
-    # ap-southeast-1: # Singapore
-    #   AMI: ami-82d387e1
-    # ap-southeast-2: # Sydney
-    #   AMI: ami-53698231
-    # ap-south-1 : # Mumbai
-    #   AMI: ami-8fb6f9e0
-    # ap-northeast-1: # Tokyo
-    #   AMI: ami-40398a26
-    # ap-northeast-2: # Seoul
-    #   AMI: ami-9e8225f0
-    # sa-east-1: # São Paulo
-    #   AMI: ami-665e1b0al
+      AMI: ami-01ed306a12b7d1c96
+    ca-central-1: # Québec
+      AMI: ami-033e6106180a626d0
+    eu-central-1: # Frankfurt
+      AMI: ami-04cf43aca3e6f3de3
+    eu-west-1: # Ireland
+      AMI: ami-0ff760d16d9497662
+    eu-west-2: # London
+      AMI: ami-0eab3a90fc693af19
+    ap-southeast-1: # Singapore
+      AMI: ami-0b4dd9d65556cac22
+    ap-southeast-2: # Sydney
+      AMI: ami-08bd00d7713a39e7d
+    ap-south-1 : # Mumbai
+      AMI: ami-02e60be79e78fef21
+    ap-northeast-1: # Tokyo
+      AMI: ami-045f38c93733dd48d
+    ap-northeast-2: # Seoul
+      AMI: ami-06cf2a72dadf92410
+    sa-east-1: # São Paulo
+      AMI: ami-0b8d86d4bf91850af
   SubnetConfig:
     VPC:
       CIDR: 172.24.0.0/16
@@ -202,14 +171,6 @@ Resources:
     Properties:
       Handle: !Ref "AvailabilityWaitHandle"
       Timeout: "600"
-
-  # S3Endpoint:
-  #   Type: AWS::EC2::VPCEndpoint
-  #   Properties:
-  #     ServiceName: !Join ["", ["com.amazonaws.", !Ref "AWS::Region", ".s3"]]
-  #     RouteTableIds:
-  #       - !Ref PublicRouteTable
-  #     VpcId: !Ref VPC
 
   DremioMaster:
     Type: AWS::EC2::Instance

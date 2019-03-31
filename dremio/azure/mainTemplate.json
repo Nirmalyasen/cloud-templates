@@ -61,9 +61,9 @@
       "dataDiskId": "[concat(subscription().id, '/resourceGroups/', variables('stateRgName'), '/providers/Microsoft.Compute/disks/', variables('dataDiskName'))]",
       "clusterSizes": {
         "Small": {
-          "coordinatorVmSize": "Standard_A2_v2",
+          "coordinatorVmSize": "Standard_D4_v3",
           "coordinatorCount": 0,
-          "executorVmSize": "Standard_A2_v2",
+          "executorVmSize": "Standard_D4_v3",
           "executorCount": 3,
           "metadataDiskSize": 100
         }

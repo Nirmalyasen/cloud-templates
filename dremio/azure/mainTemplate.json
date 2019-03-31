@@ -36,28 +36,44 @@
         },
         "coordinatorVmSize": {
           "type": "string",
-          "defaultValue": "Standard_A2_v2",
+          "defaultValue": "Standard_D4_v3",
+          "allowedValues": [
+            "Standard_D4_v3",
+            "Standard_D8_v3",
+            "Standard_D16_v3",
+            "Standard_D32_v3"
+          ],
           "metadata": {
             "description": "Size for the coordinator virtual machines."
           }
         },
         "coordinators": {
-            "type": "string",
-            "defaultValue": "0",
+            "type": "int",
+            "defaultValue": 0,
+            "minValue": "0",
+            "maxValue": "99",
             "metadata": {
               "description": "Number of coordinators in the cluster. There will be one master coordinator created aside these coordinator nodes. It is ok to have zero coordinators. "
             }
         },
         "executorVmSize": {
           "type": "string",
-          "defaultValue": "Standard_A2_v2",
+          "defaultValue": "Standard_D4_v3",
+          "allowedValues": [
+            "Standard_D4_v3",
+            "Standard_D8_v3",
+            "Standard_D16_v3",
+            "Standard_D32_v3"
+          ],
           "metadata": {
             "description": "Size for the executor virtual machines."
           }
         },
         "executors": {
-            "type": "string",
-            "defaultValue": "3",
+            "type": "int",
+            "defaultValue": 3,
+            "minValue": "1",
+            "maxValue": "99",
             "metadata": {
               "description": "Number of executors in the cluster"
             }

@@ -7,7 +7,7 @@ This repository contains [a sample Cloudformation](aws) template that can be use
  - 0 or more slave coordinators
  - 3 or more executors
 
-The templates create their own virtual network, subnets and security groups and deploys in it.
+The templates create their own virtual network, subnets, security groups and virtual machines and deploys Dremio in it. You need to have the permissions to create those resources in AWS or Azure. 
 
 ### Scaling the cluster
 The coordinators and executors are setup as scale sets - auto scale group in AWS and vm scale set in Azure. You can use the AWS and Azure UI to scale up or down the number of executors and coordinators. However, note that scaling down an executor would lead to loss of any reflection, uploaded files stored on them since it uses local disk to store such data. You can use distributed storage to overcome this - [documented here](https://docs.dremio.com/deployment/distributed-storage.html).

@@ -22,6 +22,7 @@ Clone the git repo. Customize or change, if you need to. Then you can follow the
 Try it out on AWS
 [![AWS Cloudformation](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://us-east-2.console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?templateURL=https://s3-us-west-2.amazonaws.com/aws-cloudformation.dremio.com/granular/dremio_cf.yaml&stackName=myDremio)
 
+Manually trying it out:
 - Go to AWS Console -> Cloudformation -> Create Stack
 - Select "Upload a template file" and choose aws/dremio_cf.yaml
 - Provide the required inputs on the next page
@@ -32,6 +33,7 @@ Try it out on AWS
 Try it out on Azure
 [![Azure ARM Template](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/microsoft.template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FNirmalyasen%2Fcloud-templates%2Fgranular%2Fdremio%2Fazure%2FmainTemplate.json)
 
+Manually trying it out:
  - Go to Azure Portal and search for "Template deployment"
  - Choose "Build your own template in the editor"
  - Choose "Load file" and load azure/mainTemplate.json. Save.

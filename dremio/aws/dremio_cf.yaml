@@ -15,10 +15,6 @@ Parameters:
     Type: String
     AllowedValues: [ r5d.4xlarge, r5d.12xlarge, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge, m4.16xlarge ]
     Default: r5d.4xlarge
-  coordinatorCount:
-    Description: A master coordinator will always be created. This is for additional slave coordinators. It is ok to have zero slave coordinators.
-    Type: Number
-    Default: 0
   executorInstanceType:
     Description: Same instance type is used for all the executors.
     Type: String
@@ -38,7 +34,6 @@ Metadata:
           default: Dremio Cluster Information - https://docs.dremio.com/deployment/node-roles.html
         Parameters:
           - coordinatorInstanceType
-          - coordinatorCount
           - executorInstanceType
           - executorCount
           - dremioDownloadURL
@@ -57,8 +52,6 @@ Metadata:
         default: "AWS instance type for executors"
       diskSize:
         default: "Disk size"
-      coordinatorCount:
-        default: "Number of cooordinator nodes"
       executorCount:
         default: "Number of executor nodes"
       dremioDownloadURL:
@@ -297,9 +290,9 @@ Resources:
           ResourceId: !Ref "AWS::StackName"
       LaunchConfigurationName: !Ref DremioCoordinatorLC
       VPCZoneIdentifier: [!Ref PublicSubnet]
-      DesiredCapacity: !Ref coordinatorCount
-      MaxSize: !Ref coordinatorCount
-      MinSize: !Ref coordinatorCount
+      DesiredCapacity: 0
+      MaxSize: 0
+      MinSize: 0
 
   DremioExecutorLC:
     Type: AWS::AutoScaling::LaunchConfiguration

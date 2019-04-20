@@ -49,15 +49,6 @@
             "description": "Size for the coordinator virtual machines."
           }
         },
-        "coordinators": {
-            "type": "int",
-            "defaultValue": 0,
-            "minValue": "0",
-            "maxValue": "99",
-            "metadata": {
-              "description": "Number of coordinators in the cluster. There will be one master coordinator created aside these coordinator nodes. It is ok to have zero coordinators. "
-            }
-        },
         "executorVmSize": {
           "type": "string",
           "defaultValue": "Standard_E16s_v3",
@@ -138,7 +129,7 @@
                    "dremioClusterName": {"value": "[parameters('clusterName')]"},
                    "executorCount": {"value": "[parameters('executors')]"},
                    "executorVmSize": {"value": "[parameters('executorVmSize')]"},
-                   "coordinatorCount": {"value": "[parameters('coordinators')]"},
+                   "coordinatorCount": {"value": 0},
                    "coordinatorVmSize": {"value": "[parameters('coordinatorVmSize')]"},
                    "dremioDownloadURL": {"value": "[parameters('dremioDownloadURL')]"},
                    "dataDiskId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.dataDiskId.value]"},

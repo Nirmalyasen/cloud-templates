@@ -36,8 +36,10 @@
         },
         "coordinatorVmSize": {
           "type": "string",
-          "defaultValue": "Standard_D4_v3",
+          "defaultValue": "Standard_E16s_v3",
           "allowedValues": [
+            "Standard_E16s_v3",
+            "Standard_E32s_v3",
             "Standard_D4_v3",
             "Standard_D8_v3",
             "Standard_D16_v3",
@@ -58,8 +60,10 @@
         },
         "executorVmSize": {
           "type": "string",
-          "defaultValue": "Standard_D4_v3",
+          "defaultValue": "Standard_E16s_v3",
           "allowedValues": [
+            "Standard_E16s_v3",
+            "Standard_E32s_v3",
             "Standard_D4_v3",
             "Standard_D8_v3",
             "Standard_D16_v3",

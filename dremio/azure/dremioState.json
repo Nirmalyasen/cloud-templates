@@ -11,7 +11,7 @@
     },
     "dataDiskName": {
       "type": "string",
-      "defaultValue": "dremio-data-disk",
+      "defaultValue": "[concat(parameters('dremioClusterName'), '-data-disk')]",
       "metadata": {
         "description": "Name for the Dremio Master Data Disk"
       }
@@ -44,25 +44,11 @@
         "description": "Storage account type"
       }
     },
-    "storageAccountResourceGroupName": {
-      "type": "string",
-      "defaultValue": "[resourceGroup().name]",
-      "metadata": {
-        "description": "Name of the resource group for the existing storage account"
-      }
-    },
     "virtualNetworkNewOrExisting": {
       "type": "string",
       "defaultValue": "new",
       "metadata": {
         "description": "Determines whether or not a new virtual network should be provisioned."
-      }
-    },
-    "virtualNetworkName": {
-      "type": "string",
-      "defaultValue": "VirtualNetwork",
-      "metadata": {
-        "description": "Name of the virtual network"
       }
     },
     "addressPrefixes": {
@@ -88,13 +74,6 @@
         "description": "Subnet prefix of the virtual network"
       }
     },
-    "virtualNetworkResourceGroupName": {
-      "type": "string",
-      "defaultValue": "[resourceGroup().name]",
-      "metadata": {
-        "description": "Name of the resource group for the existing virtual network"
-      }
-    },
     "publicIpNewOrExisting": {
       "type": "string",
       "defaultValue": "new",
@@ -104,14 +83,14 @@
     },
     "publicIpName": {
       "type": "string",
-      "defaultValue": "dremio-webui-publicip",
+      "defaultValue": "[concat(parameters('dremioClusterName'), '-webui-publicip')]",
       "metadata": {
         "description": "Name of the public ip address"
       }
     },
     "publicIpDns": {
       "type": "string",
-      "defaultValue": "[concat('dremio-ui-', uniqueString(resourceGroup().id))]",
+      "defaultValue": "[concat(parameters('dremioClusterName'), '-dremio')]",
       "metadata": {
         "description": "DNS of the public ip address for the VM"
       }
@@ -150,7 +129,7 @@
     "computeApiVersion": "2018-06-01",
     "storageApiVersion": "2018-07-01",
     "location": "[resourceGroup().location]",
-    "nicName": "[concat(parameters('dremioClusterName'), '-nic')]",
+    "virtualNetworkName": "[concat(parameters('dremioClusterName'), '-vnet')]",
     "publicIpAddressId": "[resourceId(parameters('publicIpResourceGroupName'), 'Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]",
     "networkSecurityGroupName": "dremio-nsg",
     "singlePlacementGroup": "true",
@@ -191,7 +170,7 @@
       "condition": "[equals(parameters('virtualNetworkNewOrExisting'), 'new')]",
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "[variables('computeApiVersion')]",
-      "name": "[parameters('virtualNetworkName')]",
+      "name": "[variables('virtualNetworkName')]",
       "location": "[variables('location')]",
       "properties": {
         "addressSpace": {
@@ -281,7 +260,7 @@
           "name": "Standard"
       },
       "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]",
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
         "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIpName'))]"
       ],
       "properties": {
@@ -368,7 +347,7 @@
     },
     "subnetId": {
       "type": "string",
-      "value": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets/', parameters('virtualNetworkName'), parameters('subnetName'))]"
+      "value": "[if(equals(parameters('virtualNetworkNewOrExisting'), 'new'), resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks/subnets/', variables('virtualNetworkName'), parameters('subnetName')), 'using-existing')]"
     },
     "loadBalancerId": {
       "type": "string",

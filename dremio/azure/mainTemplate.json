@@ -13,7 +13,7 @@
         "clusterSize": {
           "type": "string",
           "defaultValue": "Small",
-          "allowedValues": ["Small"],
+          "allowedValues": ["X-Small", "Small", "Medium", "Large", "X-Large"],
           "metadata": {
             "description": "The type and number of machines are chosen based on the size selected. For more details see <TBD>"
           }
@@ -42,6 +42,13 @@
             "description": "Password or ssh key for the virtual machines."
           }
         },
+        "useExistingSubnet": {
+          "type": "string",
+          "defaultValue": "",
+          "metadata": {
+            "description": "Optional - resource id of existing subnet to deploy to; if empty, a new vnet and subnet will be created. The subnet needs to be in the same region as the cluster."
+          }
+        },
         "dremioDownloadURL": {
           "type": "string",
           "defaultValue": "",
@@ -60,11 +67,39 @@
       "dataDiskName": "[concat(parameters('clusterName'), '-master-data-disk')]",
       "dataDiskId": "[concat(subscription().id, '/resourceGroups/', variables('stateRgName'), '/providers/Microsoft.Compute/disks/', variables('dataDiskName'))]",
       "clusterSizes": {
+        "X-Small": {
+          "coordinatorVmSize": "Standard_D4_v3",
+          "coordinatorCount": 0,
+          "executorVmSize": "Standard_E16s_v3",
+          "executorCount": 1,
+          "metadataDiskSize": 10
+        },
         "Small": {
           "coordinatorVmSize": "Standard_D4_v3",
           "coordinatorCount": 0,
-          "executorVmSize": "Standard_D4_v3",
-          "executorCount": 3,
+          "executorVmSize": "Standard_E16s_v3",
+          "executorCount": 5,
+          "metadataDiskSize": 50
+        },
+        "Medium": {
+          "coordinatorVmSize": "Standard_D8_v3",
+          "coordinatorCount": 0,
+          "executorVmSize": "Standard_E16s_v3",
+          "executorCount": 10,
+          "metadataDiskSize": 100
+        },
+        "Large": {
+          "coordinatorVmSize": "Standard_D8_v3",
+          "coordinatorCount": 0,
+          "executorVmSize": "Standard_E16s_v3",
+          "executorCount": 25,
+          "metadataDiskSize": 100
+        },
+        "X-Large": {
+          "coordinatorVmSize": "Standard_D8_v3",
+          "coordinatorCount": 0,
+          "executorVmSize": "Standard_E16s_v3",
+          "executorCount": 50,
           "metadataDiskSize": 100
         }
       }
@@ -99,7 +134,8 @@
                 "parameters": {
                    "dremioClusterName": {"value": "[parameters('clusterName')]"},
                    "dataDiskName": {"value": "[variables('dataDiskName')]"},
-                   "dataDiskSize": {"value": "[variables('clusterSizes')[parameters('clusterSize')].metadataDiskSize]"}
+                   "dataDiskSize": {"value": "[variables('clusterSizes')[parameters('clusterSize')].metadataDiskSize]"},
+                   "virtualNetworkNewOrExisting": {"value": "[if(equals(trim(parameters('useExistingSubnet')), ''), 'new', 'existing')]"}
                  }
             }
         },
@@ -127,7 +163,7 @@
                    "dataDiskId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.dataDiskId.value]"},
                    "sshUsername": {"value": "[parameters('sshUsername')]"},
                    "sshPasswordOrKey": {"value": "[parameters('sshPasswordOrKey')]"},
-                   "subnetId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.subnetId.value]"},
+                   "subnetId": {"value": "[if(equals(trim(parameters('useExistingSubnet')), ''), reference(concat(variables('shortName'), '-state-deployment')).outputs.subnetId.value, parameters('useExistingSubnet'))]"},
                    "loadBalancerId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.loadBalancerId.value]"},
                    "nsgId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.nsgId.value]"}
                  }

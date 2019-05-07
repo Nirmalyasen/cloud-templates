@@ -12,8 +12,37 @@ This deploys a Dremio cluster on Azure VMs. The deployment creates a master coor
 | X-Large      | Standard_D8_v3      | Standard_E16s_v3 |        50        |
 
 The deployment resources are:
-
-
+```
+                     ┌───────────────────────────┐
+                     │       WebUI on 9047       │
+                     │ JDBC/ODBC client on 31010 │
+                     └──────────────┬────────────┘
+                                    │
+┌───────────────────────────────────┼───────────────────────────────────┐
+│ VirtualNetwork                    │                                   │
+│ ┌─────────────────────────────────▼─────────────────────────────────┐ │
+│ │ Subnet            ┌──────────────────────────┐ ┌────────────────┐ │ │
+│ │                   │       LoadBalancer       │ │ Security Group │ │ │
+│ │                   └─────────────┬────────────┘ │Allow access to │ │ │
+│ │                                 │              │22, 9047, 31010 │ │ │
+│ │           ┌─────────────────────┤              └────────────────┘ │ │
+│ │           │                     │                                 │ │
+│ │           │                     │                                 │ │
+│ │           ▼                     ▼                                 │ │
+│ │ ┌───────────────────┐ ┌───────────────────┐ ┌───────────────────┐ │ │
+│ │ │Master Coordinator │ │ Slave Coordinator │ │     Executor      │ │ │
+│ │ │    (Azure VM)     │ │(Azure VM Scaleset)│ │(Azure VM Scaleset)│ │ │
+│ │ └───────────────────┘ └───────────────────┘ └───────────────────┘ │ │
+│ │                                                                   │ │
+│ │ ┌───────────────────┐                                             │ │
+│ │ │  Dremio Metadata  │                                             │ │
+│ │ │   (Azure Disk)    │                                             │ │
+│ │ └───────────────────┘                                             │ │
+│ └───────────────────────────────────────────────────────────────────┘ │
+│                                                                       │
+│                                                                       │
+└───────────────────────────────────────────────────────────────────────┘
+```
 You can try it out: [![Azure ARM Template](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/microsoft.template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FNirmalyasen%2Fcloud-templates%2Fmaster%2Fdremio%2Fazure%2FmainTemplate.json)
 
 The inputs required during deployment are:

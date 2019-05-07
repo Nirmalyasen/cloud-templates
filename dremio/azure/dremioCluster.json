@@ -44,7 +44,7 @@
     },
     "publicIpName": {
       "type": "string",
-      "defaultValue": "dremio-master-publicip",
+      "defaultValue": "[concat(parameters('dremioClusterName'), '-master-publicip')]",
       "metadata": {
         "description": "Name of the public ip address"
       }

@@ -90,7 +90,7 @@
     },
     "publicIpDns": {
       "type": "string",
-      "defaultValue": "[concat(parameters('dremioClusterName'), '-dremio')]",
+      "defaultValue": "[concat(parameters('dremioClusterName'), '-dremio-', uniqueString(resourceGroup().id, deployment().name))]",
       "metadata": {
         "description": "DNS of the public ip address for the VM"
       }

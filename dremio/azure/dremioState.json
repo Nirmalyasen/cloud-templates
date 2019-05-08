@@ -302,6 +302,28 @@
                         "id": "[concat(variables('lbID'), '/probes/dremio-ui')]"
                     }
                 }
+            },
+            {
+                "name": "dremio-client",
+                "properties": {
+                    "frontendIPConfiguration": {
+                        "id": "[variables('frontEndIPConfigId')]"
+                    },
+                    "frontendPort": 31010,
+                    "backendPort": 31010,
+                    "enableFloatingIP": false,
+                    "idleTimeoutInMinutes": 4,
+                    "protocol": "Tcp",
+                    "enableTcpReset": false,
+                    "loadDistribution": "SourceIP",
+                    "disableOutboundSnat": false,
+                    "backendAddressPool": {
+                        "id": "[variables('backendAddressPoolId')]"
+                    },
+                    "probe": {
+                        "id": "[concat(variables('lbID'), '/probes/dremio-ui')]"
+                    }
+                }
             }
         ],
         "probes": [

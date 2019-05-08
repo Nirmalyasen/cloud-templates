@@ -49,6 +49,13 @@
             "description": "Optional - resource id of existing subnet to deploy to; if empty, a new vnet and subnet will be created. The subnet needs to be in the same region as the cluster."
           }
         },
+        "externalLoadBalancer": {
+          "type": "bool",
+          "defaultValue": true,
+          "metadata": {
+            "description": "Select false if you are using existing subnet and you want to use an internal load balancer"
+          }
+        },
         "dremioDownloadURL": {
           "type": "string",
           "defaultValue": "",
@@ -135,7 +142,9 @@
                    "dremioClusterName": {"value": "[parameters('clusterName')]"},
                    "dataDiskName": {"value": "[variables('dataDiskName')]"},
                    "dataDiskSize": {"value": "[variables('clusterSizes')[parameters('clusterSize')].metadataDiskSize]"},
-                   "virtualNetworkNewOrExisting": {"value": "[if(equals(trim(parameters('useExistingSubnet')), ''), 'new', 'existing')]"}
+                   "virtualNetworkNewOrExisting": {"value": "[if(equals(trim(parameters('useExistingSubnet')), ''), 'new', 'existing')]"},
+                   "existingSubnet": {"value": "[parameters('useExistingSubnet')]"},
+                   "externalLoadBalancer": {"value": "[parameters('externalLoadBalancer')]"}
                  }
             }
         },

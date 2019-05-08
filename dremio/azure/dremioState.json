@@ -399,7 +399,11 @@
     },
     "dremioUIAddress": {
       "type": "string",
-      "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', parameters('publicIpName')), variables('computeApiVersion')).dnsSettings.fqdn]"
+      "value": "[if(parameters('externalLoadBalancer'), reference(concat('Microsoft.Network/publicIPAddresses/', parameters('publicIpName')), variables('computeApiVersion')).dnsSettings.fqdn, first(reference(variables('loadBalancerName')).frontendIPConfigurations).properties.privateIPAddress)]"
+    },
+    "lbObject": {
+      "type": "object",
+      "value": "[reference(variables('loadBalancerName'))]"
     }
   }
 }

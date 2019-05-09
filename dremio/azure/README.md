@@ -1,7 +1,7 @@
 
 # Deploying Dremio to Azure
 
-This deploys a Dremio cluster on Azure VMs. The deployment creates a master coordinator node and number of executor nodes depending on the size of the cluster chosen. The table below provides the machine type and number of executor nodes for the different sizes of Dremio clusters. 
+This deploys a Dremio cluster on Azure VMs. The deployment creates a master coordinator node and number of executor nodes depending on the size of the cluster chosen. The table below provides the machine type and number of executor nodes for the different sizes of Dremio clusters.
 
 | Cluster size | Coordinator VM Type | Executor VM Type | No. of Executors |
 |--------------|---------------------|------------------|------------------|
@@ -59,7 +59,6 @@ The inputs required during deployment are:
 | Password or Key |The password or ssh public key |
 | Use Existing Subnet | (Optional) id of an existing subnet. The subnet must be in the same region as the Dremio cluster resource group. It is of the form /subscriptions/xxxx/resourceGroups/xxxx/providers/Microsoft.Network/virtualNetworks/xxxx/subnets/xxxx|
 | External Load Balancer | If you are using an existing subnet and want to use an internal ip address from the subnet for load-balancing, set to false. | 
-| Dremio Download URL | (Optional) URL of a Dremio rpm. If empty, it will deploy the latest published release. |
 
 
-Once the deployment is successful, you will find the URL to Dremio UI in the output section of the deployment. 
+Once the deployment is successful, you will find the URL to Dremio UI in the output section of the deployment.

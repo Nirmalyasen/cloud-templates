@@ -173,7 +173,7 @@
     "baseURI": "https://raw.githubusercontent.com/Nirmalyasen/cloud-templates/master/dremio/azure/",
     "scriptFileName": "setupDremio.sh",
     "scriptURL": "[concat(variables('baseURI'), variables('scriptFileName'))]",
-    "install": "false"
+    "install": false
   },
   "resources": [
     {

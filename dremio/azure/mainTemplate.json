@@ -143,7 +143,7 @@
                    "dataDiskSize": {"value": "[variables('clusterSizes')[parameters('clusterSize')].metadataDiskSize]"},
                    "virtualNetworkNewOrExisting": {"value": "[if(equals(trim(parameters('useExistingSubnet')), ''), 'new', 'existing')]"},
                    "existingSubnet": {"value": "[parameters('useExistingSubnet')]"},
-                   "externalLoadBalancer": {"value": "[parameters('externalLoadBalancer')]"}
+                   "externalLoadBalancer": {"value": "[parameters('publicIPForLoadBalancer')]"}
                  }
             }
         },

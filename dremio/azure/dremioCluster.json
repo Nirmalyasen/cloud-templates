@@ -172,11 +172,11 @@
     "bePoolName": "[concat(variables('namingInfix'), 'bepool')]",
     "baseURI": "https://raw.githubusercontent.com/Nirmalyasen/cloud-templates/master/dremio/azure/",
     "scriptFileName": "setupDremio.sh",
-    "scriptURL": "[concat(variables('baseURI'), variables('scriptFileName'))]"
+    "scriptURL": "[concat(variables('baseURI'), variables('scriptFileName'))]",
+    "install": "false"
   },
   "resources": [
     {
-      "install": "false",
       "condition": "[equals(parameters('publicIpNewOrExisting'), 'new')]",
       "type": "Microsoft.Network/publicIPAddresses",
       "apiVersion": "[variables('computeApiVersion')]",

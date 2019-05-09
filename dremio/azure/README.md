@@ -56,9 +56,9 @@ The inputs required during deployment are:
 | Cluster Size |Pick a size based on your needs.|
 | SSH Username |The username that can be used to login to your nodes.|
 | Authentication Type |Password or Key based authentication for ssh.|
-| Password or Key |The password or ssh public key |
+| Password or SSH Public Key |The password or ssh public key |
 | Use Existing Subnet | (Optional) id of an existing subnet. The subnet must be in the same region as the Dremio cluster resource group. It is of the form /subscriptions/xxxx/resourceGroups/xxxx/providers/Microsoft.Network/virtualNetworks/xxxx/subnets/xxxx|
-| External Load Balancer | If you are using an existing subnet and want to use an internal ip address from the subnet for load-balancing, set to false. | 
-
+| Public IP For Load Balancer | If you are using an existing subnet and want to use an internal ip address from the subnet for load-balancing, set to false. |
+| Dremio Binary | Publicly accessible URL to a Dremio installation rpm |
 
 Once the deployment is successful, you will find the URL to Dremio UI in the output section of the deployment.

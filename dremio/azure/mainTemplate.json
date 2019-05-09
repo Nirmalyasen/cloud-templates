@@ -12,10 +12,9 @@
         },
         "clusterSize": {
           "type": "string",
-          "defaultValue": "Small",
-          "allowedValues": ["X-Small", "Small", "Medium", "Large", "X-Large"],
+          "allowedValues": ["X-Small (1 executor)", "Small (5 executors)", "Medium (10 executors )", "Large (25 executors)", "X-Large (50 executors)"],
           "metadata": {
-            "description": "The type and number of machines are chosen based on the size selected. For more details see <TBD>"
+            "description": "The type and number of machines are chosen based on the size selected."
           }
         },
         "sshUsername": {
@@ -36,10 +35,10 @@
             "description": "Type of authentication to use on the virtual machines."
           }
         },
-        "sshPasswordOrKey": {
+        "PasswordOrSSHPublicKey": {
           "type": "securestring",
           "metadata": {
-            "description": "Password or ssh key for the virtual machines."
+            "description": "Password or ssh public key for the virtual machines."
           }
         },
         "useExistingSubnet": {
@@ -55,13 +54,6 @@
           "metadata": {
             "description": "Select false if you are using existing subnet and you want to use an internal load balancer"
           }
-        },
-        "dremioDownloadURL": {
-          "type": "string",
-          "defaultValue": "",
-          "metadata": {
-            "description": "Optional - if empty, the latest Dremio CE binaries are used. Must be http or https URL."
-          }
         }
     },
     "variables": {
@@ -74,35 +66,35 @@
       "dataDiskName": "[concat(parameters('clusterName'), '-master-data-disk')]",
       "dataDiskId": "[concat(subscription().id, '/resourceGroups/', variables('stateRgName'), '/providers/Microsoft.Compute/disks/', variables('dataDiskName'))]",
       "clusterSizes": {
-        "X-Small": {
+        "X-Small (1 executor)": {
           "coordinatorVmSize": "Standard_D4_v3",
           "coordinatorCount": 0,
           "executorVmSize": "Standard_E16s_v3",
           "executorCount": 1,
           "metadataDiskSize": 10
         },
-        "Small": {
+        "Small (5 executors)": {
           "coordinatorVmSize": "Standard_D4_v3",
           "coordinatorCount": 0,
           "executorVmSize": "Standard_E16s_v3",
           "executorCount": 5,
           "metadataDiskSize": 50
         },
-        "Medium": {
+        "Medium (10 executors)": {
           "coordinatorVmSize": "Standard_D8_v3",
           "coordinatorCount": 0,
           "executorVmSize": "Standard_E16s_v3",
           "executorCount": 10,
           "metadataDiskSize": 100
         },
-        "Large": {
+        "Large (25 executors)": {
           "coordinatorVmSize": "Standard_D8_v3",
           "coordinatorCount": 0,
           "executorVmSize": "Standard_E16s_v3",
           "executorCount": 25,
           "metadataDiskSize": 100
         },
-        "X-Large": {
+        "X-Large (50 executors)": {
           "coordinatorVmSize": "Standard_D8_v3",
           "coordinatorCount": 0,
           "executorVmSize": "Standard_E16s_v3",
@@ -168,10 +160,10 @@
                    "executorVmSize": {"value": "[variables('clusterSizes')[parameters('clusterSize')].executorVmSize]"},
                    "coordinatorCount": {"value": "[variables('clusterSizes')[parameters('clusterSize')].coordinatorCount]"},
                    "coordinatorVmSize": {"value": "[variables('clusterSizes')[parameters('clusterSize')].coordinatorVmSize]"},
-                   "dremioDownloadURL": {"value": "[parameters('dremioDownloadURL')]"},
+                   "dremioDownloadURL": {"value": ""},
                    "dataDiskId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.dataDiskId.value]"},
                    "sshUsername": {"value": "[parameters('sshUsername')]"},
-                   "sshPasswordOrKey": {"value": "[parameters('sshPasswordOrKey')]"},
+                   "sshPasswordOrKey": {"value": "[parameters('PasswordOrSSHPublicKey')]"},
                    "subnetId": {"value": "[if(equals(trim(parameters('useExistingSubnet')), ''), reference(concat(variables('shortName'), '-state-deployment')).outputs.subnetId.value, parameters('useExistingSubnet'))]"},
                    "loadBalancerId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.loadBalancerId.value]"},
                    "nsgId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.nsgId.value]"}

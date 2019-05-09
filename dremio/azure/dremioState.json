@@ -161,7 +161,8 @@
     "natBackendPort": 9047,
     "frontEndIPConfigId": "[concat(variables('lbID'),'/frontendIPConfigurations/loadBalancerFrontEnd')]",
     "backendAddressPoolId": "[concat(variables('lbID'),'/backendAddressPools/', variables('bePoolName'))]",
-    "lbfrontEndIPConfig": "[if(parameters('externalLoadBalancer'), variables('externallbFronEndIpConfig'), variables('internallbFrontEndIpConfig'))]",
+    "externallb": "[and(parameters(externalLoadBalancer), equals(parameters('virtualNetworkNewOrExisting'), 'new'))]",
+    "lbfrontEndIPConfig": "[if(variables('externallb'), variables('externallbFronEndIpConfig'), variables('internallbFrontEndIpConfig'))]",
     "externallbFronEndIpConfig": {
       "publicIPAddress": {
         "id": "[variables('publicIpAddressId')]"
@@ -262,7 +263,7 @@
       }
     },
     {
-      "condition": "[and(equals(parameters('publicIpNewOrExisting'), 'new'), parameters('externalLoadBalancer'))]",
+      "condition": "[variables('externallb')]",
       "type": "Microsoft.Network/publicIPAddresses",
       "apiVersion": "[variables('computeApiVersion')]",
       "name": "[parameters('publicIpName')]",
@@ -399,7 +400,7 @@
     },
     "dremioUIAddress": {
       "type": "string",
-      "value": "[if(parameters('externalLoadBalancer'), reference(concat('Microsoft.Network/publicIPAddresses/', parameters('publicIpName')), variables('computeApiVersion')).dnsSettings.fqdn, first(reference(variables('loadBalancerName')).frontendIPConfigurations).properties.privateIPAddress)]"
+      "value": "[if(variables('externallb'), reference(concat('Microsoft.Network/publicIPAddresses/', parameters('publicIpName')), variables('computeApiVersion')).dnsSettings.fqdn, first(reference(variables('loadBalancerName')).frontendIPConfigurations).properties.privateIPAddress)]"
     },
     "lbObject": {
       "type": "object",

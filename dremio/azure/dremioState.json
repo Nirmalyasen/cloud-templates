@@ -161,7 +161,7 @@
     "natBackendPort": 9047,
     "frontEndIPConfigId": "[concat(variables('lbID'),'/frontendIPConfigurations/loadBalancerFrontEnd')]",
     "backendAddressPoolId": "[concat(variables('lbID'),'/backendAddressPools/', variables('bePoolName'))]",
-    "externallb": "[and(parameters(externalLoadBalancer), equals(parameters('virtualNetworkNewOrExisting'), 'new'))]",
+    "externallb": "[or(parameters('externalLoadBalancer'), equals(trim(parameters('existingSubnet')), ''))]",
     "lbfrontEndIPConfig": "[if(variables('externallb'), variables('externallbFronEndIpConfig'), variables('internallbFrontEndIpConfig'))]",
     "externallbFronEndIpConfig": {
       "publicIPAddress": {

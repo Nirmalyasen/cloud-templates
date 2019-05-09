@@ -17,11 +17,11 @@
             "description": "The type and number of machines are chosen based on the size selected."
           }
         },
-        "sshUsername": {
+        "SSHUsername": {
           "type": "string",
           "defaultValue": "azuser",
           "metadata": {
-            "description": "SSH username for the virtual machines. You need it if you need to login to the machines."
+            "description": "SSH username for the virtual machines. You need it if you want to login to the machines."
           }
         },
         "authenticationType": {
@@ -29,7 +29,7 @@
           "defaultValue": "password",
           "allowedValues": [
             "password",
-            "sshPublicKey"
+            "SSHPublicKey"
           ],
           "metadata": {
             "description": "Type of authentication to use on the virtual machines."
@@ -38,21 +38,28 @@
         "PasswordOrSSHPublicKey": {
           "type": "securestring",
           "metadata": {
-            "description": "Password or ssh public key for the virtual machines."
+            "description": "Password or ssh public key for the virtual machines. If password, password must be minimum 6 characters with at least 1 upper case letter, 1 lower case letter and 1 number."
           }
         },
         "useExistingSubnet": {
           "type": "string",
           "defaultValue": "",
           "metadata": {
-            "description": "Optional - resource id of existing subnet to deploy to; if empty, a new vnet and subnet will be created. The subnet needs to be in the same region as the cluster."
+            "description": "Optional - resource id of existing subnet to deploy to; the subnet needs to be in the same region as the cluster.  If empty, a new virtual network and subnet will be created."
           }
         },
-        "externalLoadBalancer": {
+        "publicLoadBalancerIP": {
           "type": "bool",
           "defaultValue": true,
           "metadata": {
-            "description": "Select false if you are using existing subnet and you want to use an internal load balancer"
+            "description": "Select false if you are using existing subnet and you want to use an internal ip from the subnet for your load balancer"
+          }
+        },
+        "dremioBinary": {
+          "type": "string",
+          "defaultValue": "",
+          "metadata": {
+            "description": "Optional - publicly accessible URL to a Dremio installation rpm"
           }
         }
     },
@@ -160,10 +167,10 @@
                    "executorVmSize": {"value": "[variables('clusterSizes')[parameters('clusterSize')].executorVmSize]"},
                    "coordinatorCount": {"value": "[variables('clusterSizes')[parameters('clusterSize')].coordinatorCount]"},
                    "coordinatorVmSize": {"value": "[variables('clusterSizes')[parameters('clusterSize')].coordinatorVmSize]"},
-                   "dremioDownloadURL": {"value": ""},
+                   "dremioDownloadURL": {"value": "[parameters('dremioBinary')]"},
                    "dataDiskId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.dataDiskId.value]"},
-                   "sshUsername": {"value": "[parameters('sshUsername')]"},
-                   "sshPasswordOrKey": {"value": "[parameters('PasswordOrSSHPublicKey')]"},
+                   "sshUsername": {"value": "[parameters('SSHUsername')]"},
+                   "sshPasswordOrKey": {"value": "[parameters('publicLoadBalancerIP')]"},
                    "subnetId": {"value": "[if(equals(trim(parameters('useExistingSubnet')), ''), reference(concat(variables('shortName'), '-state-deployment')).outputs.subnetId.value, parameters('useExistingSubnet'))]"},
                    "loadBalancerId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.loadBalancerId.value]"},
                    "nsgId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.nsgId.value]"}

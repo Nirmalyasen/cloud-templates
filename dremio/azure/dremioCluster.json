@@ -176,6 +176,7 @@
   },
   "resources": [
     {
+      "install": "false",
       "condition": "[equals(parameters('publicIpNewOrExisting'), 'new')]",
       "type": "Microsoft.Network/publicIPAddresses",
       "apiVersion": "[variables('computeApiVersion')]",
@@ -297,6 +298,7 @@
         "apiVersion": "[variables('computeApiVersion')]",
         "location": "[variables('location')]",
         "dependsOn": ["[concat(parameters('dremioClusterName'), '-master')]"],
+        "condition": "[variables('install')]",
         "sku": {
             "name": "[parameters('coordinatorVmSize')]",
             "tier": "Standard",

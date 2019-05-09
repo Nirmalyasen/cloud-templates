@@ -1,0 +1,10 @@
+{
+  "$schema": "https://aka.ms/azure-quickstart-templates-metadata-schema#",
+  "type": "QuickStart",
+  "itemDisplayName": "Deploy a Dremio cluster",
+  "icon": "centos",
+  "description": "This template allows you to deploy a Dremio CE edition.",
+  "summary": "This template takes a minimum amount of parameters and deploys a Linux VM, using the latest patched version.",
+  "githubUsername": "dremio",
+  "dateUpdated": "2019-05-09"
+}

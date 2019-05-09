@@ -48,7 +48,7 @@
             "description": "Optional - resource id of existing subnet to deploy to; the subnet needs to be in the same region as the cluster.  If empty, a new virtual network and subnet will be created."
           }
         },
-        "publicLoadBalancerIP": {
+        "publicIPForLoadBalancer": {
           "type": "bool",
           "defaultValue": true,
           "metadata": {
@@ -170,7 +170,7 @@
                    "dremioDownloadURL": {"value": "[parameters('dremioBinary')]"},
                    "dataDiskId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.dataDiskId.value]"},
                    "sshUsername": {"value": "[parameters('SSHUsername')]"},
-                   "sshPasswordOrKey": {"value": "[parameters('publicLoadBalancerIP')]"},
+                   "sshPasswordOrKey": {"value": "[parameters('publicIPForLoadBalancer')]"},
                    "subnetId": {"value": "[if(equals(trim(parameters('useExistingSubnet')), ''), reference(concat(variables('shortName'), '-state-deployment')).outputs.subnetId.value, parameters('useExistingSubnet'))]"},
                    "loadBalancerId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.loadBalancerId.value]"},
                    "nsgId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.nsgId.value]"}

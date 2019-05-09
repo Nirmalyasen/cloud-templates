@@ -58,6 +58,7 @@ The inputs required during deployment are:
 | Authentication Type |Password or Key based authentication for ssh.|
 | Password or Key |The password or ssh public key |
 | Use Existing Subnet | (Optional) id of an existing subnet. The subnet must be in the same region as the Dremio cluster resource group. It is of the form /subscriptions/xxxx/resourceGroups/xxxx/providers/Microsoft.Network/virtualNetworks/xxxx/subnets/xxxx|
+| External Load Balancer | If you are using an existing subnet and want to use an internal ip address from the subnet for load-balancing, set to false. | 
 | Dremio Download URL | (Optional) URL of a Dremio rpm. If empty, it will deploy the latest published release. |
 
 

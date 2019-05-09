@@ -51,7 +51,7 @@
     },
     "publicIpDns": {
       "type": "string",
-      "defaultValue": "[concat('linux-vm-', uniqueString(resourceGroup().id))]",
+      "defaultValue": "[concat('linux-vm-', uniqueString(resourceGroup().id, deployment().name))]",
       "metadata": {
         "description": "DNS of the public ip address for the VM"
       }

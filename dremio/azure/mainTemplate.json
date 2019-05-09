@@ -170,7 +170,7 @@
                    "dremioDownloadURL": {"value": "[parameters('dremioBinary')]"},
                    "dataDiskId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.dataDiskId.value]"},
                    "sshUsername": {"value": "[parameters('SSHUsername')]"},
-                   "sshPasswordOrKey": {"value": "[parameters('publicIPForLoadBalancer')]"},
+                   "sshPasswordOrKey": {"value": "[parameters('PasswordOrSSHPublicKey')]"},
                    "subnetId": {"value": "[if(equals(trim(parameters('useExistingSubnet')), ''), reference(concat(variables('shortName'), '-state-deployment')).outputs.subnetId.value, parameters('useExistingSubnet'))]"},
                    "loadBalancerId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.loadBalancerId.value]"},
                    "nsgId": {"value": "[reference(concat(variables('shortName'), '-state-deployment')).outputs.nsgId.value]"}

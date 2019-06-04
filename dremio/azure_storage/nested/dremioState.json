@@ -58,14 +58,6 @@
         "description": "Storage access tier"
       }
     },
-
-    "networkAclsVirtualNetworkRules": {
-        "value": [
-            {
-                "id": "/subscriptions/c6bf787f-998c-4d09-aeee-7ab346bcc0c9/resourceGroups/test/providers/Microsoft.Network/virtualNetworks/azure-vnet-1/subnets/corp"
-            }
-        ]
-    },
     "virtualNetworkNewOrExisting": {
       "type": "string",
       "defaultValue": "new",

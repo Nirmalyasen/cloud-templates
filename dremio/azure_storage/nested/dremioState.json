@@ -416,16 +416,13 @@
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "[variables('storageApiVersion')]",
       "location": "[variables('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+      ],
       "properties": {
           "accessTier": "[parameters('storageAccessTier')]",
           "supportsHttpsTrafficOnly": true,
-          "isHnsEnabled": true,
-          "networkAcls": {
-              "bypass": "[variables('networkAclsBypass')]",
-              "defaultAction": "[variables('networkAclsDefaultAction')]",
-              "ipRules": [],
-              "virtualNetworkRules": "[if(equals(parameters('virtualNetworkNewOrExisting'), 'new'), resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks/subnets/', variables('virtualNetworkName'), parameters('subnetName')), parameters('existingSubnet'))]"
-          },
+          "isHnsEnabled": true
       },
       "sku": {
           "name": "[parameters('storageAccountType')]"
@@ -453,6 +450,10 @@
     "dremioUIAddress": {
       "type": "string",
       "value": "[if(variables('install'), if(variables('externallb'), reference(concat('Microsoft.Network/publicIPAddresses/', parameters('publicIpName')), variables('computeApiVersion')).dnsSettings.fqdn, first(reference(variables('loadBalancerName')).frontendIPConfigurations).properties.privateIPAddress), '')]"
+    },
+    "dremioStorageAccount": {
+      "type": "string",
+      "value": "[parameters('storageAccountName')]"
     },
     "dremioStorageAccountKey": {
       "type": "string",

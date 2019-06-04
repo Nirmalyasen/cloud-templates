@@ -3,9 +3,7 @@
 [ -z $DOWNLOAD_URL ] && DOWNLOAD_URL=http://download.dremio.com/community-server/dremio-community-LATEST.noarch.rpm
 if [ ! -f /opt/dremio/bin/dremio ]; then
   command -v yum >/dev/null 2>&1 || { echo >&2 "This script works only on Centos or Red Hat. Aborting."; exit 1; }
-  yum install -y java-1.8.0-openjdk
-  wget $DOWNLOAD_URL -O dremio-download.rpm
-  yum -y localinstall dremio-download.rpm
+  yum install -y java-1.8.0-openjdk-devel $DOWNLOAD_URL
 fi
 
 service=$1
@@ -44,7 +42,11 @@ if [ "$service" == "master" ]; then
   chown dremio:dremio $DREMIO_DATA_DIR
   echo "$DISK_PART $DREMIO_DATA_DIR ext4 defaults 0 0" >> /etc/fstab
 else
-  zookeeper=$2
+  if [ -n '$use_azure_storage' ]; then
+    zookeeper=$4
+  else
+    zookeeper=$2
+  fi
   if [ -z "$zookeeper" ]; then
     echo "Non-master node requires zookeeper host"
     exit 2

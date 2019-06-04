@@ -16,6 +16,10 @@ fi
 storage_account=$2
 access_key=$3
 
+if [ -n "$storage_account" -a -n "$access_key" ]; then
+  use_azure_storage=1
+fi
+
 # In Azure, /dev/sdb is ephemeral storage mapped to /mnt/resource.
 # Additional disks are mounted after that...
 DISK_NAME=/dev/sdc
@@ -78,11 +82,10 @@ function upgrade_master {
 }
 
 function setup_master {
-  if [ -n "$storage_account" -a -n "$access_key" ]; then
+  if [ -n '$use_azure_storage' ]; then
     storage_create_action "dremiodata" filesystem && \
     storage_create_action "dremiodata/accelerator" directory && \
-    storage_create_action "dremiodata/uploads" directory && \
-    use_azure_storage=1
+    storage_create_action "dremiodata/uploads" directory
   fi
 
   configure_dremio_dist
@@ -183,7 +186,7 @@ EOF
 }
 
 function configure_dremio_dist {
-  if [ -n '$use_azure_storage']; then
+  if [ -n '$use_azure_storage' ]; then
     write_coresite_xml
     update_dremio_config
   fi

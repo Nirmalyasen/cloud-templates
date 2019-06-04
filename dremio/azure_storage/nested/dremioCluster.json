@@ -210,7 +210,7 @@
         "publicIPAllocationMethod": "[parameters('publicIpAllocationMethod')]",
         "dnsSettings": {
           "domainNameLabel": "[parameters('publicIpDns')]",
-          "reverseFqdn": "[concat(parameters('publicIpDns'), '.', parameters('location'), '.cloudapp.azure.com')]"
+          "reverseFqdn": "[concat(parameters('publicIpDns'), '.', variables('location'), '.cloudapp.azure.com')]"
         }
       }
     },

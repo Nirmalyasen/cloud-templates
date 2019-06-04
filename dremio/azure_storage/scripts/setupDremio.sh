@@ -73,7 +73,7 @@ function upgrade_master {
   cd $DREMIO_DATA_DIR
   if [ -d db ]; then
     tar -zcvf dremio_db_$(date '+%Y-%m-%d_%H-%M').tar.gz db
-    /opt/dremio/bin/dremio-admin upgrade
+    sudo -u dremio /opt/dremio/bin/dremio-admin upgrade
   fi
 }
 

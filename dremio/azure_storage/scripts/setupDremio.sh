@@ -82,10 +82,10 @@ function setup_master {
     storage_create_action "dremiodata" filesystem && \
     storage_create_action "dremiodata/accelerator" directory && \
     storage_create_action "dremiodata/uploads" directory && \
-    write_coresite_xml && \
-    configure_dremio_storage
+    use_azure_storage=1
   fi
 
+  configure_dremio_dist
   sed -i "s/executor.enabled: true/executor.enabled: false/" $DREMIO_CONFIG_FILE
   upgrade_master
 }
@@ -93,6 +93,7 @@ function setup_master {
 function setup_coordinator {
   yum install -y nc
   until nc -z $zookeeper 9047 > /dev/null; do echo waiting for dremio master; sleep 2; done;
+  configure_dremio_dist
   sed -i "s/coordinator.master.enabled: true/coordinator.master.enabled: false/; \
           s/executor.enabled: true/executor.enabled: false/" \
           $DREMIO_CONFIG_FILE
@@ -100,6 +101,7 @@ function setup_coordinator {
 }
 
 function setup_executor {
+  configure_dremio_dist
   setup_spill
   sed -i "s/coordinator.master.enabled: true/coordinator.master.enabled: false/; \
           s/coordinator.enabled: true/coordinator.enabled: false/; \
@@ -140,7 +142,6 @@ function storage_create_action {
 }
 
 function write_coresite_xml {
-
 cat > $DREMIO_CONFIG_DIR/core-site.xml <<EOF
 <?xml version="1.0"?>
 <configuration>
@@ -171,15 +172,21 @@ cat > $DREMIO_CONFIG_DIR/core-site.xml <<EOF
 </property>
 </configuration>
 EOF
-
 }
 
-function configure_dremio_storage {
+function update_dremio_config {
 cat >> $DREMIO_CONFIG_FILE <<EOF
 
 paths.accelerator: "dremioAzureStorage://:///dremiodata/accelerator"
 paths.uploads: "dremioAzureStorage://:///dremiodata/uploads"
 EOF
+}
+
+function configure_dremio_dist {
+  if [ -n '$use_azure_storage']; then
+    write_coresite_xml
+    update_dremio_config
+  fi
 }
 
 setup_$service

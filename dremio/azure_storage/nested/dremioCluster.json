@@ -303,7 +303,7 @@
               ]
             },
             "protectedSettings": {
-              "commandToExecute": "[concat('DOWNLOAD_URL=\"', parameters('dremioDownloadURL'), '\" bash ', variables('scriptFileName'), ' master ' + parameters('storageAccount') + ' ' + parameters('storageAccountAccessKey'))]"
+              "commandToExecute": "[concat('DOWNLOAD_URL=\"', parameters('dremioDownloadURL'), '\" bash ', variables('scriptFileName'), ' master ', parameters('storageAccount'), ' ', parameters('storageAccountAccessKey'))]"
             }
           }
         }

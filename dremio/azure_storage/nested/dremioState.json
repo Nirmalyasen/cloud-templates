@@ -30,34 +30,6 @@
         "description": "Determines whether or not a new storage account should be provisioned."
       }
     },
-    "storageAccountName": {
-      "type": "string",
-      "defaultValue": "[concat('dremiometa',uniqueString(resourceGroup().id, deployment().name))]",
-      "metadata": {
-        "description": "Name of the storage account"
-      }
-    },
-    "storageAccountType": {
-      "type": "string",
-      "defaultValue": "Standard_LRS",
-      "metadata": {
-        "description": "Storage account type"
-      }
-    },
-    "storageKind": {
-      "type": "string",
-      "defaultValue": "StorageV2",
-      "metadata": {
-        "description": "Storage account kind"
-      }
-    },
-    "storageAccessTier": {
-      "type": "string",
-      "defaultValue": "Hot",
-      "metadata": {
-        "description": "Storage access tier"
-      }
-    },
     "virtualNetworkNewOrExisting": {
       "type": "string",
       "defaultValue": "new",
@@ -155,7 +127,6 @@
   },
   "variables": {
     "computeApiVersion": "2018-06-01",
-    "storageApiVersion": "2018-07-01",
     "location": "[resourceGroup().location]",
     "virtualNetworkName": "[concat(parameters('dremioClusterName'), '-vnet')]",
     "publicIpAddressId": "[resourceId(parameters('publicIpResourceGroupName'), 'Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]",
@@ -411,24 +382,7 @@
         ]
       }
     },
-    {
-      "name": "[parameters('storageAccountName')]",
-      "type": "Microsoft.Storage/storageAccounts",
-      "apiVersion": "[variables('storageApiVersion')]",
-      "location": "[variables('location')]",
-      "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
-      ],
-      "properties": {
-          "accessTier": "[parameters('storageAccessTier')]",
-          "supportsHttpsTrafficOnly": true,
-          "isHnsEnabled": true
-      },
-      "sku": {
-          "name": "[parameters('storageAccountType')]"
-      },
-      "kind": "[parameters('storageKind')]"
-    }
+
   ],
   "outputs": {
     "dataDiskId": {
@@ -450,14 +404,6 @@
     "dremioUIAddress": {
       "type": "string",
       "value": "[if(variables('install'), if(variables('externallb'), reference(concat('Microsoft.Network/publicIPAddresses/', parameters('publicIpName')), variables('computeApiVersion')).dnsSettings.fqdn, first(reference(variables('loadBalancerName')).frontendIPConfigurations).properties.privateIPAddress), '')]"
-    },
-    "dremioStorageAccount": {
-      "type": "string",
-      "value": "[parameters('storageAccountName')]"
-    },
-    "dremioStorageAccountKey": {
-      "type": "string",
-      "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
     }
   }
 }

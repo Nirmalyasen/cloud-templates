@@ -277,7 +277,7 @@
       "location": "[variables('location')]",
       "dependsOn": [
         "[variables('nicName')]",
-        "[variables('storageAccountName')]"
+        "[parameters('storageAccountName')]"
       ],
       "properties": {
         "hardwareProfile": {

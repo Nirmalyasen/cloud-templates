@@ -411,7 +411,7 @@
                           "fileUris": [
                             "[variables('scriptURL')]"
                           ],
-                          "commandToExecute": "[concat('DOWNLOAD_URL=\"', parameters('dremioDownloadURL'), '\" bash ', variables('scriptFileName'), ' coordinator ', parameters('storageAccount'), ' ', parameters('storageAccountAccessKey'), ' ', reference(concat(parameters('dremioClusterName'), '-nic'), variables('computeApiVersion')).ipConfigurations[0].properties.privateIPAddress)]"
+                          "commandToExecute": "[concat('DOWNLOAD_URL=\"', parameters('dremioDownloadURL'), '\" bash ', variables('scriptFileName'), ' coordinator ', parameters('storageAccountName'), ' ', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value, ' ', reference(concat(parameters('dremioClusterName'), '-nic'), variables('computeApiVersion')).ipConfigurations[0].properties.privateIPAddress)]"
                         }
                       }
                     }
@@ -486,7 +486,7 @@
                           "fileUris": [
                             "[variables('scriptURL')]"
                           ],
-                          "commandToExecute": "[concat('DOWNLOAD_URL=\"', parameters('dremioDownloadURL'), '\" bash ', variables('scriptFileName'), ' executor ', parameters('storageAccount'), ' ', parameters('storageAccountAccessKey'), ' ', reference(concat(parameters('dremioClusterName'), '-nic'), variables('computeApiVersion')).ipConfigurations[0].properties.privateIPAddress)]"
+                          "commandToExecute": "[concat('DOWNLOAD_URL=\"', parameters('dremioDownloadURL'), '\" bash ', variables('scriptFileName'), ' executor ', parameters('storageAccountName'), ' ', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value, ' ', reference(concat(parameters('dremioClusterName'), '-nic'), variables('computeApiVersion')).ipConfigurations[0].properties.privateIPAddress)]"
                         }
                       }
                     }
